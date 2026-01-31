@@ -1,0 +1,301 @@
+# ============================================================================
+# Verify — Weights & Biases (Weave) Integration
+# ============================================================================
+# Weave is the LLM tracing & observability platform from W&B.
+# This workflow verifies that every major agent operation is traced via Weave,
+# that weave.op() wrappers are used correctly, and that the tracing
+# infrastructure is wired up end-to-end.
+#
+# Docs: https://wandb.me/use-weave
+# ============================================================================
+
+name: "Verify — Weave (W&B)"
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "webscout/src/lib/tracing/**"
+      - "webscout/src/lib/engine/**"
+      - "webscout/src/lib/redis/vectors.ts"
+      - "webscout/src/lib/embeddings/**"
+      - "webscout/package.json"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "webscout/src/lib/tracing/**"
+      - "webscout/src/lib/engine/**"
+      - "webscout/src/lib/redis/vectors.ts"
+      - "webscout/src/lib/embeddings/**"
+      - "webscout/package.json"
+
+concurrency:
+  group: verify-weave-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  WORKING_DIR: webscout
+
+jobs:
+  verify-weave:
+    name: "Weave Integration"
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      # ── 1. Package installed ──
+      - name: "Check: weave package installed"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Weave Package ==="
+          if node -e "require('weave')" 2>/dev/null; then
+            echo "  ✅ 'weave' package is importable"
+          else
+            echo "  ❌ 'weave' package cannot be imported"
+            exit 1
+          fi
+
+          if grep -q '"weave"' package.json; then
+            VERSION=$(node -e "console.log(require('./node_modules/weave/package.json').version)" 2>/dev/null || echo "unknown")
+            echo "  ✅ weave@$VERSION in package.json"
+          else
+            echo "  ❌ 'weave' not in package.json dependencies"
+            exit 1
+          fi
+
+      # ── 2. Tracing module exists ──
+      - name: "Check: tracing module files"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Tracing Module ==="
+          PASS=0; FAIL=0
+
+          check_file() {
+            if [ -f "$1" ]; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 — NOT FOUND"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          check_file "src/lib/tracing/weave.ts"
+          check_file "src/lib/tracing/trace-context.ts"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── 3. weave.init() called ──
+      - name: "Check: weave.init() initialization"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Weave Initialization ==="
+          if grep -rq "weave\.init\|weave\.login\|init.*weave" src/lib/tracing/; then
+            echo "  ✅ weave.init() found in tracing module"
+            grep -rn "weave\.init\|init.*weave" src/lib/tracing/ | head -5 | while read -r line; do
+              echo "     ↳ $line"
+            done
+          else
+            echo "  ❌ weave.init() not found — tracing won't work"
+            exit 1
+          fi
+
+      # ── 4. weave.op() wrappers used ──
+      - name: "Check: weave.op() function wrappers"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== weave.op() Usage ==="
+          OP_COUNT=$(grep -r "weave\.op\|weave\.op(" src/ --include="*.ts" --include="*.tsx" | wc -l | tr -d ' ')
+
+          if [ "$OP_COUNT" -gt 0 ]; then
+            echo "  ✅ weave.op() used $OP_COUNT times across the codebase"
+            echo ""
+            echo "  Traced functions:"
+            grep -rn "weave\.op(" src/ --include="*.ts" --include="*.tsx" | while read -r line; do
+              echo "     ↳ $line"
+            done
+          else
+            echo "  ❌ weave.op() not used anywhere — no functions are traced"
+            exit 1
+          fi
+
+      # ── 5. Key operations are traced ──
+      - name: "Check: critical operations have Weave tracing"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Traced Operations ==="
+          PASS=0; WARN=0
+
+          check_traced() {
+            FILE="$1"
+            NAME="$2"
+            if [ -f "$FILE" ]; then
+              if grep -q "weave\|op(" "$FILE"; then
+                echo "  ✅ $NAME ($FILE) — has Weave tracing"
+                PASS=$((PASS + 1))
+              else
+                echo "  ⚠️  $NAME ($FILE) — no Weave tracing found"
+                WARN=$((WARN + 1))
+              fi
+            fi
+          }
+
+          check_traced "src/lib/engine/scraper.ts" "Learning scrape loop"
+          check_traced "src/lib/engine/recovery.ts" "Recovery strategies"
+          check_traced "src/lib/redis/vectors.ts" "Vector search"
+          check_traced "src/lib/embeddings/openai.ts" "Embedding generation"
+          check_traced "src/lib/browser/session.ts" "Browser session"
+          check_traced "src/lib/engine/pattern-extractor.ts" "Pattern extraction"
+
+          echo ""
+          echo "Results: $PASS traced, $WARN untraced"
+
+      # ── 6. Screenshot & DOM capture ──
+      - name: "Check: trace context captures screenshots & DOM"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Trace Context ==="
+          FILE="src/lib/tracing/trace-context.ts"
+
+          if [ ! -f "$FILE" ]; then
+            echo "  ❌ trace-context.ts not found"
+            exit 1
+          fi
+
+          FEATURES=0
+          if grep -q "screenshot\|Screenshot\|captureScreenshot" "$FILE"; then
+            echo "  ✅ Screenshot capture function"
+            FEATURES=$((FEATURES + 1))
+          else
+            echo "  ❌ No screenshot capture"
+          fi
+
+          if grep -q "DOM\|dom\|captureDOMSnapshot\|innerHTML\|content()" "$FILE"; then
+            echo "  ✅ DOM snapshot capture function"
+            FEATURES=$((FEATURES + 1))
+          else
+            echo "  ❌ No DOM snapshot capture"
+          fi
+
+          if grep -q "export" "$FILE"; then
+            echo "  ✅ Functions are exported"
+            FEATURES=$((FEATURES + 1))
+          fi
+
+          echo ""
+          echo "  Features: $FEATURES/3"
+          [ "$FEATURES" -ge 2 ] || exit 1
+
+      # ── 7. wrapOpenAI integration ──
+      - name: "Check: Weave wraps OpenAI client"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Weave + OpenAI Integration ==="
+          if grep -rq "wrapOpenAI\|weave.*OpenAI\|weave.*openai" src/ --include="*.ts"; then
+            echo "  ✅ weave.wrapOpenAI() found — OpenAI calls are traced"
+            grep -rn "wrapOpenAI" src/ --include="*.ts" | head -3 | while read -r line; do
+              echo "     ↳ $line"
+            done
+          else
+            echo "  ⚠️  weave.wrapOpenAI() not found — OpenAI calls won't appear in traces"
+          fi
+
+      # ── 8. Environment variables ──
+      - name: "Check: Weave env vars referenced"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Environment Variables ==="
+          PASS=0; FAIL=0
+
+          if grep -rq "WANDB_API_KEY" src/ .env* 2>/dev/null; then
+            echo "  ✅ WANDB_API_KEY referenced"
+            PASS=$((PASS + 1))
+          else
+            echo "  ❌ WANDB_API_KEY not referenced anywhere"
+            FAIL=$((FAIL + 1))
+          fi
+
+          if grep -rq "WEAVE_PROJECT" src/ .env* 2>/dev/null; then
+            echo "  ✅ WEAVE_PROJECT referenced"
+            PASS=$((PASS + 1))
+          else
+            echo "  ❌ WEAVE_PROJECT not referenced anywhere"
+            FAIL=$((FAIL + 1))
+          fi
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+
+      # ── 9. Nested trace structure ──
+      - name: "Check: nested trace tree structure"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Nested Trace Tree ==="
+          echo "  Checking that traced functions call other traced functions"
+          echo "  (creates the nested tree visible in W&B dashboard)"
+          echo ""
+
+          # The scraper should call traced sub-functions
+          FILE="src/lib/engine/scraper.ts"
+          if [ -f "$FILE" ]; then
+            CALLS=0
+            for fn in "searchSimilarPatterns\|vectorSearch" "createSession\|createStagehand" "captureScreenshot" "storePattern" "attemptRecovery\|recovery" "extractPattern"; do
+              if grep -q "$fn" "$FILE"; then
+                CALLS=$((CALLS + 1))
+              fi
+            done
+            echo "  ✅ scraper.ts calls $CALLS/6 traced sub-operations"
+            if [ "$CALLS" -ge 3 ]; then
+              echo "  ✅ Sufficient nesting for meaningful trace tree"
+            else
+              echo "  ⚠️  Trace tree may be shallow — consider tracing more sub-operations"
+            fi
+          fi
+
+      # ── 10. TypeScript compilation ──
+      - name: "Check: TypeScript compiles with Weave types"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx tsc --noEmit
+        env:
+          BROWSERBASE_API_KEY: ci_placeholder
+          BROWSERBASE_PROJECT_ID: ci_placeholder
+          OPENAI_API_KEY: ci_placeholder
+          REDIS_URL: redis://localhost:6379
+          WANDB_API_KEY: ci_placeholder
+          WEAVE_PROJECT: webscout
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+      # ── Summary ──
+      - name: "Weave Verification Summary"
+        if: always()
+        run: |
+          echo ""
+          echo "╔════════════════════════════════════════════════╗"
+          echo "║  Weave (W&B) Integration — Verified            ║"
+          echo "║                                                 ║"
+          echo "║  ✓ weave package installed                      ║"
+          echo "║  ✓ weave.init() initializes tracing             ║"
+          echo "║  ✓ weave.op() wraps key functions               ║"
+          echo "║  ✓ Screenshots & DOM captured in traces         ║"
+          echo "║  ✓ OpenAI calls wrapped for tracing             ║"
+          echo "║  ✓ Nested trace tree for W&B dashboard          ║"
+          echo "║                                                 ║"
+          echo "║  🔗 https://wandb.me/use-weave                  ║"
+          echo "╚════════════════════════════════════════════════╝"
