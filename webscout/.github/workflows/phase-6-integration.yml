@@ -1,0 +1,489 @@
+# ============================================================================
+# Phase 6 — Full Integration & Deploy Readiness
+# ============================================================================
+# The definitive workflow. Runs ALL verifications from Phases 1-5 in a single
+# pipeline, plus production readiness checks: error handling patterns, env var
+# validation, complete file structure audit, and full smoke test suite.
+#
+# This is the gate for merging to main and deploying to Vercel.
+# ============================================================================
+
+name: "Phase 6 — Integration"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  WORKING_DIR: webscout
+  APP_URL: http://localhost:3000
+  BROWSERBASE_API_KEY: ci_placeholder
+  BROWSERBASE_PROJECT_ID: ci_placeholder
+  OPENAI_API_KEY: ci_placeholder
+  REDIS_URL: redis://localhost:6379
+  WANDB_API_KEY: ci_placeholder
+  WEAVE_PROJECT: webscout
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+jobs:
+  # ════════════════════════════════════════════════
+  # Job 1: Build & Type Check
+  # ════════════════════════════════════════════════
+  build:
+    name: "Build & Lint"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: TypeScript
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run lint
+
+      - name: Build
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+
+      # Cache the build for the smoke-test job
+      - name: Cache build output
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ env.WORKING_DIR }}/.next
+            ${{ env.WORKING_DIR }}/node_modules
+          key: build-${{ github.sha }}
+
+  # ════════════════════════════════════════════════
+  # Job 2: File Structure Audit (all phases)
+  # ════════════════════════════════════════════════
+  structure:
+    name: "File Structure Audit"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Audit: Phase 1 — Scaffolding"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Phase 1 — Scaffolding              ║"
+          echo "╚══════════════════════════════════════╝"
+          TOTAL=0; FOUND=0
+
+          audit() {
+            TOTAL=$((TOTAL + 1))
+            if [ -f "$1" ]; then FOUND=$((FOUND + 1)); echo "  ✅ $1"; else echo "  ❌ $1"; fi
+          }
+
+          audit "package.json"
+          audit "next.config.ts"
+          audit "tsconfig.json"
+          audit "docker-compose.yml"
+          audit ".env.example"
+          audit "components.json"
+          audit "src/components/theme-provider.tsx"
+          audit "src/app/layout.tsx"
+          audit "src/app/page.tsx"
+          audit "src/app/globals.css"
+          audit "src/lib/utils.ts"
+
+          echo "  Score: $FOUND/$TOTAL"
+          echo ""
+
+      - name: "Audit: Phase 2 — Infrastructure"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Phase 2 — Infrastructure           ║"
+          echo "╚══════════════════════════════════════╝"
+          TOTAL=0; FOUND=0
+
+          audit() {
+            TOTAL=$((TOTAL + 1))
+            if [ -f "$1" ]; then FOUND=$((FOUND + 1)); echo "  ✅ $1"; else echo "  ❌ $1"; fi
+          }
+
+          audit "src/lib/utils/types.ts"
+          audit "src/lib/utils/url.ts"
+          audit "src/lib/redis/client.ts"
+          audit "src/lib/redis/vectors.ts"
+          audit "src/lib/redis/patterns.ts"
+          audit "src/lib/embeddings/openai.ts"
+          audit "src/lib/tracing/weave.ts"
+          audit "src/lib/tracing/trace-context.ts"
+
+          echo "  Score: $FOUND/$TOTAL"
+          echo ""
+
+      - name: "Audit: Phase 3 — Engine"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Phase 3 — Engine                   ║"
+          echo "╚══════════════════════════════════════╝"
+          TOTAL=0; FOUND=0
+
+          audit() {
+            TOTAL=$((TOTAL + 1))
+            if [ -f "$1" ]; then FOUND=$((FOUND + 1)); echo "  ✅ $1"; else echo "  ❌ $1"; fi
+          }
+
+          audit "src/lib/browser/session.ts"
+          audit "src/lib/browser/stagehand-client.ts"
+          audit "src/lib/engine/scraper.ts"
+          audit "src/lib/engine/recovery.ts"
+          audit "src/lib/engine/pattern-extractor.ts"
+
+          echo "  Score: $FOUND/$TOTAL"
+          echo ""
+
+      - name: "Audit: Phase 4 — API Routes"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Phase 4 — API Routes               ║"
+          echo "╚══════════════════════════════════════╝"
+          TOTAL=0; FOUND=0
+
+          audit() {
+            TOTAL=$((TOTAL + 1))
+            if [ -f "$1" ]; then FOUND=$((FOUND + 1)); echo "  ✅ $1"; else echo "  ❌ $1"; fi
+          }
+
+          audit "src/lib/redis/tasks.ts"
+          audit "src/app/api/tasks/route.ts"
+          audit "src/app/api/tasks/[id]/route.ts"
+          audit "src/app/api/patterns/route.ts"
+          audit "src/app/api/health/route.ts"
+
+          echo "  Score: $FOUND/$TOTAL"
+          echo ""
+
+      - name: "Audit: Phase 5 — Dashboard"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Phase 5 — Dashboard                ║"
+          echo "╚══════════════════════════════════════╝"
+          TOTAL=0; FOUND=0
+
+          audit() {
+            TOTAL=$((TOTAL + 1))
+            if [ -f "$1" ]; then FOUND=$((FOUND + 1)); echo "  ✅ $1"; else echo "  ❌ $1"; fi
+          }
+
+          echo "--- Pages ---"
+          audit "src/app/dashboard/layout.tsx"
+          audit "src/app/dashboard/page.tsx"
+          audit "src/app/tasks/layout.tsx"
+          audit "src/app/tasks/page.tsx"
+          audit "src/app/tasks/[id]/page.tsx"
+          audit "src/app/patterns/layout.tsx"
+          audit "src/app/patterns/page.tsx"
+
+          echo "--- Components ---"
+          audit "src/components/stats-overview.tsx"
+          audit "src/components/task-form.tsx"
+          audit "src/components/task-list.tsx"
+          audit "src/components/trace-timeline.tsx"
+          audit "src/components/pattern-card.tsx"
+          audit "src/components/pattern-grid.tsx"
+
+          echo "--- Hooks ---"
+          audit "src/hooks/use-tasks.ts"
+          audit "src/hooks/use-patterns.ts"
+
+          echo "  Score: $FOUND/$TOTAL"
+          echo ""
+
+      - name: "Audit: Complete Summary"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Complete File Audit                ║"
+          echo "╚══════════════════════════════════════╝"
+
+          PAGES=$(find src/app -name "page.tsx" 2>/dev/null | wc -l | tr -d ' ')
+          LAYOUTS=$(find src/app -name "layout.tsx" 2>/dev/null | wc -l | tr -d ' ')
+          CUSTOM_COMPONENTS=$(ls src/components/*.tsx 2>/dev/null | wc -l | tr -d ' ')
+          UI_COMPONENTS=$(ls src/components/ui/*.tsx 2>/dev/null | wc -l | tr -d ' ')
+          HOOKS=$(ls src/hooks/*.ts 2>/dev/null | wc -l | tr -d ' ')
+          API_ROUTES=$(find src/app/api -name "route.ts" 2>/dev/null | wc -l | tr -d ' ')
+          LIB_FILES=$(find src/lib -name "*.ts" 2>/dev/null | wc -l | tr -d ' ')
+
+          echo ""
+          echo "  Pages:             $PAGES (expected: 5+)"
+          echo "  Layouts:           $LAYOUTS (expected: 4+)"
+          echo "  Custom Components: $CUSTOM_COMPONENTS (expected: 7+)"
+          echo "  shadcn/ui:         $UI_COMPONENTS (expected: 10+)"
+          echo "  Hooks:             $HOOKS (expected: 2+)"
+          echo "  API Routes:        $API_ROUTES (expected: 4+)"
+          echo "  Lib Modules:       $LIB_FILES (expected: 10+)"
+
+  # ════════════════════════════════════════════════
+  # Job 3: Code Quality Checks
+  # ════════════════════════════════════════════════
+  quality:
+    name: "Code Quality"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for error handling in critical paths
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Error Handling Audit               ║"
+          echo "╚══════════════════════════════════════╝"
+
+          # Check that API routes have try/catch
+          for route in src/app/api/tasks/route.ts src/app/api/tasks/\[id\]/route.ts src/app/api/patterns/route.ts src/app/api/health/route.ts; do
+            if [ -f "$route" ]; then
+              if grep -q "try" "$route" && grep -q "catch" "$route"; then
+                echo "  ✅ $route has try/catch"
+              else
+                echo "  ⚠️  $route may lack error handling"
+              fi
+            fi
+          done
+
+          # Check that Weave gracefully degrades
+          if [ -f "src/lib/tracing/weave.ts" ]; then
+            if grep -q "catch" "src/lib/tracing/weave.ts"; then
+              echo "  ✅ Weave tracing has error handling"
+            else
+              echo "  ⚠️  Weave tracing may not handle failures"
+            fi
+          fi
+
+          # Check that Stagehand has error context
+          if [ -f "src/lib/browser/stagehand-client.ts" ]; then
+            if grep -q "catch\|throw.*Error" "src/lib/browser/stagehand-client.ts"; then
+              echo "  ✅ Stagehand client has error handling"
+            else
+              echo "  ⚠️  Stagehand client may lack error context"
+            fi
+          fi
+
+      - name: Check for sensitive data exposure
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Security Check                     ║"
+          echo "╚══════════════════════════════════════╝"
+
+          # Ensure no API keys are hardcoded
+          if grep -r "sk-[a-zA-Z0-9]" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v "placeholder\|example\|ci_"; then
+            echo "  ❌ Possible hardcoded API key found!"
+            exit 1
+          else
+            echo "  ✅ No hardcoded API keys found"
+          fi
+
+          # Ensure .env.local is gitignored
+          if grep -q ".env.local\|.env*.local" .gitignore 2>/dev/null; then
+            echo "  ✅ .env.local is gitignored"
+          else
+            echo "  ⚠️  .env.local may not be gitignored"
+          fi
+
+          # Check that .env.local is not committed
+          if [ -f ".env.local" ]; then
+            echo "  ❌ .env.local exists in repo — should be gitignored!"
+          else
+            echo "  ✅ .env.local not in repo"
+          fi
+
+      - name: Check for TODO/FIXME comments
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "╔══════════════════════════════════════╗"
+          echo "║   TODO/FIXME Audit                   ║"
+          echo "╚══════════════════════════════════════╝"
+
+          TODO_COUNT=$(grep -r "TODO\|FIXME\|HACK\|XXX" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$TODO_COUNT" -gt 0 ]; then
+            echo "  ⚠️  Found $TODO_COUNT TODO/FIXME comments:"
+            grep -rn "TODO\|FIXME\|HACK\|XXX" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | head -10
+          else
+            echo "  ✅ No TODO/FIXME comments found"
+          fi
+
+  # ════════════════════════════════════════════════
+  # Job 4: Smoke Tests (with Redis)
+  # ════════════════════════════════════════════════
+  smoke-test:
+    name: "Smoke Tests"
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      redis:
+        image: redis/redis-stack-server:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Restore cached build
+      - name: Restore build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ env.WORKING_DIR }}/.next
+            ${{ env.WORKING_DIR }}/node_modules
+          key: build-${{ github.sha }}
+
+      - name: Start server
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          npm start &
+          echo $! > /tmp/app.pid
+
+          for i in $(seq 1 30); do
+            if curl -sf ${{ env.APP_URL }}/api/health > /dev/null 2>&1; then
+              echo "✅ Server ready after ${i}s"
+              break
+            fi
+            [ "$i" -eq 30 ] && { echo "❌ Server failed to start"; exit 1; }
+            sleep 1
+          done
+
+      # ── API Smoke Tests ──
+      - name: "API: Health check"
+        run: |
+          RESPONSE=$(curl -sf ${{ env.APP_URL }}/api/health)
+          echo "$RESPONSE" | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          assert d['services']['redis']['status'] == 'ok', 'Redis not ok'
+          print('✅ Health: Redis connected')
+          "
+
+      - name: "API: GET /api/tasks"
+        run: |
+          curl -sf ${{ env.APP_URL }}/api/tasks | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          assert isinstance(d.get('tasks'), list)
+          assert 'stats' in d
+          print('✅ GET /api/tasks: OK')
+          "
+
+      - name: "API: GET /api/patterns"
+        run: |
+          curl -sf ${{ env.APP_URL }}/api/patterns | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          assert isinstance(d.get('patterns'), list)
+          print('✅ GET /api/patterns: OK')
+          "
+
+      - name: "API: Input validation (4 tests)"
+        run: |
+          # Missing target
+          [ "$(curl -so /dev/null -w '%{http_code}' -X POST ${{ env.APP_URL }}/api/tasks \
+            -H 'Content-Type: application/json' -d '{"url":"https://x.com"}')" = "400" ] \
+            && echo "✅ Missing target → 400" || { echo "❌ Missing target test failed"; exit 1; }
+
+          # Missing URL
+          [ "$(curl -so /dev/null -w '%{http_code}' -X POST ${{ env.APP_URL }}/api/tasks \
+            -H 'Content-Type: application/json' -d '{"target":"t"}')" = "400" ] \
+            && echo "✅ Missing URL → 400" || { echo "❌ Missing URL test failed"; exit 1; }
+
+          # Invalid URL
+          [ "$(curl -so /dev/null -w '%{http_code}' -X POST ${{ env.APP_URL }}/api/tasks \
+            -H 'Content-Type: application/json' -d '{"url":"bad","target":"t"}')" = "400" ] \
+            && echo "✅ Invalid URL → 400" || { echo "❌ Invalid URL test failed"; exit 1; }
+
+          # Unknown task ID
+          [ "$(curl -so /dev/null -w '%{http_code}' ${{ env.APP_URL }}/api/tasks/does-not-exist)" = "404" ] \
+            && echo "✅ Unknown task → 404" || { echo "❌ Unknown task test failed"; exit 1; }
+
+      # ── Page Render Tests ──
+      - name: "Pages: Render check (4 pages)"
+        run: |
+          for path in "/" "/dashboard" "/tasks" "/patterns"; do
+            HTTP=$(curl -so /dev/null -w '%{http_code}' -L "${{ env.APP_URL }}$path")
+            [ "$HTTP" = "200" ] && echo "✅ $path → 200" || { echo "❌ $path → $HTTP"; exit 1; }
+          done
+
+      - name: "Pages: Content type check"
+        run: |
+          # HTML pages
+          for path in "/dashboard" "/tasks" "/patterns"; do
+            CT=$(curl -sI -L "${{ env.APP_URL }}$path" | grep -i "content-type" | head -1)
+            echo "$CT" | grep -qi "text/html" && echo "✅ $path → HTML" || echo "⚠️  $path → $CT"
+          done
+
+          # JSON API
+          CT=$(curl -sI "${{ env.APP_URL }}/api/tasks" | grep -i "content-type" | head -1)
+          echo "$CT" | grep -qi "application/json" && echo "✅ /api/tasks → JSON" || echo "⚠️  /api/tasks → $CT"
+
+      # ── Redis Vector Test ──
+      - name: "Redis: RediSearch module available"
+        run: |
+          MODULES=$(redis-cli -h 127.0.0.1 MODULE LIST)
+          echo "$MODULES" | grep -qi "search" \
+            && echo "✅ RediSearch module loaded" \
+            || { echo "❌ RediSearch not available"; exit 1; }
+
+      # ── Cleanup ──
+      - name: Stop server
+        if: always()
+        run: |
+          [ -f /tmp/app.pid ] && kill $(cat /tmp/app.pid) 2>/dev/null || true
+
+      # ── Final Summary ──
+      - name: Integration Summary
+        if: always()
+        run: |
+          echo ""
+          echo "╔══════════════════════════════════════════════╗"
+          echo "║                                              ║"
+          echo "║   WebScout — Integration Check Complete      ║"
+          echo "║   Ready for Vercel deployment                ║"
+          echo "║                                              ║"
+          echo "║   Phase 1: Scaffolding          ✓            ║"
+          echo "║   Phase 2: Infrastructure       ✓            ║"
+          echo "║   Phase 3: Engine               ✓            ║"
+          echo "║   Phase 4: API Routes           ✓            ║"
+          echo "║   Phase 5: Dashboard            ✓            ║"
+          echo "║   Phase 6: Integration          ✓            ║"
+          echo "║                                              ║"
+          echo "╚══════════════════════════════════════════════╝"

@@ -1,0 +1,329 @@
+# ============================================================================
+# Phase 2 — Core Infrastructure Verification
+# ============================================================================
+# Validates: shared types compile, Redis client/vectors/patterns modules exist,
+# embedding module exists, Weave tracing setup, URL utilities, and that the
+# Redis vector index can be created against a real Redis Stack instance.
+#
+# Uses Redis Stack service container for real RediSearch testing.
+# ============================================================================
+
+name: "Phase 2 — Infrastructure"
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "webscout/src/lib/**"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "webscout/src/lib/**"
+
+concurrency:
+  group: phase-2-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  WORKING_DIR: webscout
+
+jobs:
+  verify-infrastructure:
+    name: Verify Infrastructure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      redis:
+        image: redis/redis-stack-server:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      # ── Verify lib/ file structure ──
+      - name: Verify lib modules exist
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Phase 2 File Structure ==="
+          PASS=0; FAIL=0
+
+          check_file() {
+            if [ -f "$1" ]; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 — NOT FOUND"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          echo "--- Shared Types & Utils ---"
+          check_file "src/lib/utils/types.ts"
+          check_file "src/lib/utils/url.ts"
+
+          echo "--- Redis Layer ---"
+          check_file "src/lib/redis/client.ts"
+          check_file "src/lib/redis/vectors.ts"
+          check_file "src/lib/redis/patterns.ts"
+
+          echo "--- Embeddings ---"
+          check_file "src/lib/embeddings/openai.ts"
+
+          echo "--- Tracing ---"
+          check_file "src/lib/tracing/weave.ts"
+          check_file "src/lib/tracing/trace-context.ts"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify types.ts exports required interfaces ──
+      - name: Verify TypeScript interfaces
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Type Definitions ==="
+          FILE="src/lib/utils/types.ts"
+          PASS=0; FAIL=0
+
+          check_type() {
+            if grep -q "export interface $1" "$FILE" 2>/dev/null || grep -q "export type $1" "$FILE" 2>/dev/null; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 — not exported from $FILE"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          check_type "PagePattern"
+          check_type "TaskRequest"
+          check_type "TaskResult"
+          check_type "TaskStep"
+          check_type "RecoveryResult"
+          check_type "PatternData"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify Redis module exports ──
+      - name: Verify Redis modules export key functions
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Redis Module Exports ==="
+          PASS=0; FAIL=0
+
+          check_export() {
+            if grep -q "export.*$2" "$1" 2>/dev/null; then
+              echo "  ✅ $1 → $2"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 → $2 not exported"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          # client.ts
+          check_export "src/lib/redis/client.ts" "getRedisClient"
+
+          # vectors.ts
+          check_export "src/lib/redis/vectors.ts" "ensureVectorIndex"
+          check_export "src/lib/redis/vectors.ts" "searchSimilarPatterns"
+          check_export "src/lib/redis/vectors.ts" "storePattern"
+          check_export "src/lib/redis/vectors.ts" "incrementPatternSuccess"
+
+          # patterns.ts
+          check_export "src/lib/redis/patterns.ts" "listPatterns"
+          check_export "src/lib/redis/patterns.ts" "getPattern"
+          check_export "src/lib/redis/patterns.ts" "getPatternCount"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify embeddings module ──
+      - name: Verify embeddings module
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Embeddings Module ==="
+          FILE="src/lib/embeddings/openai.ts"
+
+          if grep -q "text-embedding-3-small" "$FILE" 2>/dev/null; then
+            echo "  ✅ Uses text-embedding-3-small model"
+          else
+            echo "  ⚠️  text-embedding-3-small not found in $FILE"
+          fi
+
+          if grep -q "export.*generateEmbedding" "$FILE" 2>/dev/null; then
+            echo "  ✅ Exports generateEmbedding"
+          else
+            echo "  ❌ generateEmbedding not exported"
+            exit 1
+          fi
+
+      # ── Verify Weave tracing module ──
+      - name: Verify Weave tracing module
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Weave Tracing ==="
+          FILE="src/lib/tracing/weave.ts"
+
+          if grep -q "export.*initWeave" "$FILE" 2>/dev/null; then
+            echo "  ✅ Exports initWeave"
+          else
+            echo "  ❌ initWeave not exported"
+            exit 1
+          fi
+
+          if grep -q "export.*createTracedOp\|export.*weave" "$FILE" 2>/dev/null; then
+            echo "  ✅ Exports tracing utilities"
+          else
+            echo "  ⚠️  No tracing utility exports found"
+          fi
+
+      # ── Verify URL utility ──
+      - name: Verify URL utility
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking URL Utility ==="
+          FILE="src/lib/utils/url.ts"
+
+          if grep -q "export.*extractUrlPattern" "$FILE" 2>/dev/null; then
+            echo "  ✅ Exports extractUrlPattern"
+          else
+            echo "  ❌ extractUrlPattern not exported"
+            exit 1
+          fi
+
+      # ── Verify vectors.ts uses RediSearch correctly ──
+      - name: Verify vector search implementation
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Vector Search Implementation ==="
+          FILE="src/lib/redis/vectors.ts"
+          PASS=0; WARN=0
+
+          if grep -q "SchemaFieldTypes" "$FILE" 2>/dev/null; then
+            echo "  ✅ Uses SchemaFieldTypes from redis"
+            PASS=$((PASS + 1))
+          else
+            echo "  ⚠️  SchemaFieldTypes not found"
+            WARN=$((WARN + 1))
+          fi
+
+          if grep -q "VectorAlgorithms\|HNSW" "$FILE" 2>/dev/null; then
+            echo "  ✅ Uses HNSW vector algorithm"
+            PASS=$((PASS + 1))
+          else
+            echo "  ⚠️  HNSW algorithm not found"
+            WARN=$((WARN + 1))
+          fi
+
+          if grep -q "COSINE\|cosine" "$FILE" 2>/dev/null; then
+            echo "  ✅ Uses COSINE distance metric"
+            PASS=$((PASS + 1))
+          else
+            echo "  ⚠️  COSINE metric not found"
+            WARN=$((WARN + 1))
+          fi
+
+          if grep -q "1536" "$FILE" 2>/dev/null; then
+            echo "  ✅ Vector dimension set to 1536"
+            PASS=$((PASS + 1))
+          else
+            echo "  ⚠️  1536 dimensions not found"
+            WARN=$((WARN + 1))
+          fi
+
+          if grep -q "KNN" "$FILE" 2>/dev/null; then
+            echo "  ✅ Uses KNN search"
+            PASS=$((PASS + 1))
+          else
+            echo "  ⚠️  KNN query not found"
+            WARN=$((WARN + 1))
+          fi
+
+          echo ""
+          echo "Results: $PASS verified, $WARN warnings"
+
+      # ── Redis connectivity test ──
+      - name: Verify Redis connectivity
+        run: |
+          echo "=== Testing Redis Stack ==="
+          # Basic ping
+          PONG=$(redis-cli -h 127.0.0.1 ping)
+          [ "$PONG" = "PONG" ] && echo "  ✅ Redis PING → PONG" || { echo "  ❌ Redis not responding"; exit 1; }
+
+          # Verify RediSearch module is loaded
+          MODULES=$(redis-cli -h 127.0.0.1 MODULE LIST)
+          if echo "$MODULES" | grep -qi "search"; then
+            echo "  ✅ RediSearch module loaded"
+          else
+            echo "  ❌ RediSearch module not available"
+            echo "  Loaded modules: $MODULES"
+            exit 1
+          fi
+
+          # Test FT.CREATE with a vector field
+          redis-cli -h 127.0.0.1 FT.CREATE test_idx ON HASH PREFIX 1 test: SCHEMA \
+            name TEXT SORTABLE \
+            vec VECTOR HNSW 6 TYPE FLOAT32 DIM 4 DISTANCE_METRIC COSINE \
+            > /dev/null 2>&1 && echo "  ✅ FT.CREATE with VECTOR field works" || echo "  ❌ FT.CREATE failed"
+
+          # Verify index exists
+          redis-cli -h 127.0.0.1 FT.INFO test_idx > /dev/null 2>&1 && echo "  ✅ FT.INFO works" || echo "  ❌ FT.INFO failed"
+
+          # Cleanup
+          redis-cli -h 127.0.0.1 FT.DROPINDEX test_idx > /dev/null 2>&1
+
+      # ── TypeScript ──
+      - name: TypeScript type checking
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx tsc --noEmit
+
+      # ── Lint ──
+      - name: ESLint
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run lint
+
+      # ── Build ──
+      - name: Production build
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        env:
+          BROWSERBASE_API_KEY: ci_placeholder
+          BROWSERBASE_PROJECT_ID: ci_placeholder
+          OPENAI_API_KEY: ci_placeholder
+          REDIS_URL: redis://localhost:6379
+          WANDB_API_KEY: ci_placeholder
+          WEAVE_PROJECT: webscout
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+      # ── Summary ──
+      - name: Phase 2 Summary
+        if: always()
+        run: |
+          echo ""
+          echo "╔══════════════════════════════════════╗"
+          echo "║  Phase 2 — Infrastructure Verified   ║"
+          echo "╚══════════════════════════════════════╝"

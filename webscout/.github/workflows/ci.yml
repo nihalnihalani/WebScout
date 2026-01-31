@@ -1,0 +1,68 @@
+# ============================================================================
+# CI — Continuous Integration (runs on every push and PR)
+# ============================================================================
+# Lightweight workflow that always runs: install, type-check, lint, build.
+# This is the baseline quality gate — catches compile errors and lint issues
+# before any phase-specific checks run.
+# ============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "webscout/**"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "webscout/**"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  WORKING_DIR: webscout
+
+jobs:
+  ci:
+    name: "Install → Type Check → Lint → Build"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: TypeScript type checking
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run lint
+
+      - name: Production build
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        env:
+          BROWSERBASE_API_KEY: ci_placeholder
+          BROWSERBASE_PROJECT_ID: ci_placeholder
+          OPENAI_API_KEY: ci_placeholder
+          REDIS_URL: redis://localhost:6379
+          WANDB_API_KEY: ci_placeholder
+          WEAVE_PROJECT: webscout
+          NEXT_PUBLIC_APP_URL: http://localhost:3000

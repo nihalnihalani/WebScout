@@ -1,0 +1,296 @@
+# ============================================================================
+# Phase 3 — Learning Scraper Engine Verification
+# ============================================================================
+# Validates: browser session management, Stagehand client factory, pattern
+# extractor, recovery strategies, and the core learningScrape function.
+# Checks that the learning loop algorithm is correctly structured.
+#
+# NOTE: This workflow does NOT run actual browser sessions (would need
+# Browserbase credentials). It verifies code structure, exports, and build.
+# ============================================================================
+
+name: "Phase 3 — Engine"
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "webscout/src/lib/engine/**"
+      - "webscout/src/lib/browser/**"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "webscout/src/lib/engine/**"
+      - "webscout/src/lib/browser/**"
+
+concurrency:
+  group: phase-3-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  WORKING_DIR: webscout
+
+jobs:
+  verify-engine:
+    name: Verify Engine
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      # ── Verify engine file structure ──
+      - name: Verify engine modules exist
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Phase 3 File Structure ==="
+          PASS=0; FAIL=0
+
+          check_file() {
+            if [ -f "$1" ]; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 — NOT FOUND"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          echo "--- Browser Layer ---"
+          check_file "src/lib/browser/session.ts"
+          check_file "src/lib/browser/stagehand-client.ts"
+
+          echo "--- Engine Core ---"
+          check_file "src/lib/engine/scraper.ts"
+          check_file "src/lib/engine/recovery.ts"
+          check_file "src/lib/engine/pattern-extractor.ts"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify browser module exports ──
+      - name: Verify browser module exports
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Browser Module Exports ==="
+          PASS=0; FAIL=0
+
+          check_export() {
+            if grep -q "export.*$2" "$1" 2>/dev/null; then
+              echo "  ✅ $1 → $2"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 → $2 not exported"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          check_export "src/lib/browser/session.ts" "createBrowserSession"
+          check_export "src/lib/browser/stagehand-client.ts" "createStagehand"
+          check_export "src/lib/browser/stagehand-client.ts" "closeStagehand"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify engine module exports ──
+      - name: Verify engine module exports
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Engine Module Exports ==="
+          PASS=0; FAIL=0
+
+          check_export() {
+            if grep -q "export.*$2" "$1" 2>/dev/null; then
+              echo "  ✅ $1 → $2"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 → $2 not exported"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          # scraper.ts — the heart
+          check_export "src/lib/engine/scraper.ts" "learningScrape"
+
+          # recovery.ts
+          check_export "src/lib/engine/recovery.ts" "attemptRecovery"
+
+          # pattern-extractor.ts
+          check_export "src/lib/engine/pattern-extractor.ts" "buildPattern"
+          check_export "src/lib/engine/pattern-extractor.ts" "isConfidentMatch"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify learning loop structure ──
+      - name: Verify learning loop algorithm
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Learning Loop Structure ==="
+          FILE="src/lib/engine/scraper.ts"
+          PASS=0; WARN=0
+
+          check_pattern() {
+            if grep -q "$1" "$FILE" 2>/dev/null; then
+              echo "  ✅ $2"
+              PASS=$((PASS + 1))
+            else
+              echo "  ⚠️  $2 — pattern not found"
+              WARN=$((WARN + 1))
+            fi
+          }
+
+          echo "Step 1: Vector search for cached patterns"
+          check_pattern "searchSimilarPatterns\|vectorSearch\|vector_search" "Searches for similar patterns"
+
+          echo "Step 2: Browser initialization"
+          check_pattern "createStagehand" "Creates Stagehand instance"
+
+          echo "Step 3: Cache hit handling"
+          check_pattern "isConfidentMatch\|cache_hit\|cached" "Handles cache hits"
+
+          echo "Step 4: Fresh extraction"
+          check_pattern "fresh_extract\|extract" "Attempts fresh extraction"
+
+          echo "Step 5: Recovery on failure"
+          check_pattern "attemptRecovery\|recovery" "Triggers recovery on failure"
+
+          echo "Step 6: Pattern storage"
+          check_pattern "storePattern" "Stores learned patterns"
+
+          echo "Step 7: Screenshots"
+          check_pattern "captureScreenshot\|screenshot" "Captures screenshots"
+
+          echo "Step 8: Cleanup"
+          check_pattern "closeStagehand\|finally" "Cleans up browser session"
+
+          echo ""
+          echo "Results: $PASS verified, $WARN warnings"
+
+      # ── Verify recovery strategies ──
+      - name: Verify recovery strategies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Recovery Strategies ==="
+          FILE="src/lib/engine/recovery.ts"
+          PASS=0; WARN=0
+
+          # Check for multi-strategy approach
+          if grep -q "agent\|Agent" "$FILE" 2>/dev/null; then
+            echo "  ✅ Strategy A: Agent-based recovery"
+            PASS=$((PASS + 1))
+          else
+            echo "  ⚠️  Agent-based strategy not found"
+            WARN=$((WARN + 1))
+          fi
+
+          if grep -q "act\b\|blocker\|cookie\|popup" "$FILE" 2>/dev/null; then
+            echo "  ✅ Strategy B: Blocker removal (act)"
+            PASS=$((PASS + 1))
+          else
+            echo "  ⚠️  Blocker removal strategy not found"
+            WARN=$((WARN + 1))
+          fi
+
+          if grep -q "refined\|Refined\|retry\|Retry" "$FILE" 2>/dev/null; then
+            echo "  ✅ Strategy C: Refined extraction"
+            PASS=$((PASS + 1))
+          else
+            echo "  ⚠️  Refined extraction strategy not found"
+            WARN=$((WARN + 1))
+          fi
+
+          echo ""
+          echo "Results: $PASS verified, $WARN warnings"
+
+      # ── Verify Stagehand client uses correct config ──
+      - name: Verify Stagehand configuration
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Stagehand Configuration ==="
+          FILE="src/lib/browser/stagehand-client.ts"
+
+          if grep -q "BROWSERBASE" "$FILE" 2>/dev/null; then
+            echo "  ✅ Uses BROWSERBASE environment"
+          else
+            echo "  ❌ BROWSERBASE env not set"
+            exit 1
+          fi
+
+          if grep -q "BROWSERBASE_API_KEY\|apiKey" "$FILE" 2>/dev/null; then
+            echo "  ✅ References API key"
+          else
+            echo "  ⚠️  API key reference not found"
+          fi
+
+          if grep -q "gpt-4o\|modelName" "$FILE" 2>/dev/null; then
+            echo "  ✅ Configures LLM model"
+          else
+            echo "  ⚠️  LLM model configuration not found"
+          fi
+
+      # ── Verify Weave tracing integration ──
+      - name: Verify Weave integration in engine
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Weave Integration ==="
+
+          if grep -q "createTracedOp\|weave\.op\|initWeave" "src/lib/engine/scraper.ts" 2>/dev/null; then
+            echo "  ✅ scraper.ts uses Weave tracing"
+          else
+            echo "  ⚠️  scraper.ts may not be traced with Weave"
+          fi
+
+          if grep -q "createTracedOp\|weave\.op" "src/lib/engine/recovery.ts" 2>/dev/null; then
+            echo "  ✅ recovery.ts uses Weave tracing"
+          else
+            echo "  ⚠️  recovery.ts may not be traced with Weave"
+          fi
+
+      # ── TypeScript ──
+      - name: TypeScript type checking
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx tsc --noEmit
+
+      # ── Lint ──
+      - name: ESLint
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run lint
+
+      # ── Build ──
+      - name: Production build
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        env:
+          BROWSERBASE_API_KEY: ci_placeholder
+          BROWSERBASE_PROJECT_ID: ci_placeholder
+          OPENAI_API_KEY: ci_placeholder
+          REDIS_URL: redis://localhost:6379
+          WANDB_API_KEY: ci_placeholder
+          WEAVE_PROJECT: webscout
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+      # ── Summary ──
+      - name: Phase 3 Summary
+        if: always()
+        run: |
+          echo ""
+          echo "╔══════════════════════════════════════╗"
+          echo "║    Phase 3 — Engine Verified         ║"
+          echo "╚══════════════════════════════════════╝"

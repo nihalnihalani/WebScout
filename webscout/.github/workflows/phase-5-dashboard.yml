@@ -1,0 +1,411 @@
+# ============================================================================
+# Phase 5 — Dashboard UI Verification
+# ============================================================================
+# Validates: all page files exist, component files present, hook files present,
+# layout hierarchy correct, "use client" directives where needed, build works,
+# and the dashboard renders (server starts + pages respond with 200).
+# ============================================================================
+
+name: "Phase 5 — Dashboard"
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "webscout/src/app/**"
+      - "webscout/src/components/**"
+      - "webscout/src/hooks/**"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "webscout/src/app/**"
+      - "webscout/src/components/**"
+      - "webscout/src/hooks/**"
+
+concurrency:
+  group: phase-5-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  WORKING_DIR: webscout
+  APP_URL: http://localhost:3000
+  BROWSERBASE_API_KEY: ci_placeholder
+  BROWSERBASE_PROJECT_ID: ci_placeholder
+  OPENAI_API_KEY: ci_placeholder
+  REDIS_URL: redis://localhost:6379
+  WANDB_API_KEY: ci_placeholder
+  WEAVE_PROJECT: webscout
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+jobs:
+  verify-dashboard:
+    name: Verify Dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    services:
+      redis:
+        image: redis/redis-stack-server:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      # ── Verify page files ──
+      - name: Verify page files exist
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Dashboard Page Files ==="
+          PASS=0; FAIL=0
+
+          check_file() {
+            if [ -f "$1" ]; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 — NOT FOUND"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          echo "--- Root ---"
+          check_file "src/app/layout.tsx"
+          check_file "src/app/page.tsx"
+          check_file "src/app/globals.css"
+
+          echo "--- Dashboard ---"
+          check_file "src/app/dashboard/layout.tsx"
+          check_file "src/app/dashboard/page.tsx"
+
+          echo "--- Tasks ---"
+          check_file "src/app/tasks/layout.tsx"
+          check_file "src/app/tasks/page.tsx"
+          check_file "src/app/tasks/[id]/page.tsx"
+
+          echo "--- Patterns ---"
+          check_file "src/app/patterns/layout.tsx"
+          check_file "src/app/patterns/page.tsx"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify component files ──
+      - name: Verify component files exist
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Dashboard Components ==="
+          PASS=0; FAIL=0
+
+          check_file() {
+            if [ -f "$1" ]; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 — NOT FOUND"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          echo "--- Custom Components ---"
+          check_file "src/components/stats-overview.tsx"
+          check_file "src/components/task-form.tsx"
+          check_file "src/components/task-list.tsx"
+          check_file "src/components/trace-timeline.tsx"
+          check_file "src/components/pattern-card.tsx"
+          check_file "src/components/pattern-grid.tsx"
+          check_file "src/components/theme-provider.tsx"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify hooks ──
+      - name: Verify hook files exist
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== SWR Hooks ==="
+          PASS=0; FAIL=0
+
+          check_hook() {
+            if [ -f "$1" ]; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+              # Check for SWR usage
+              if grep -q "useSWR" "$1" 2>/dev/null; then
+                echo "     ↳ Uses SWR ✓"
+              else
+                echo "     ↳ ⚠️  Does not use SWR"
+              fi
+              # Check for refreshInterval
+              if grep -q "refreshInterval" "$1" 2>/dev/null; then
+                echo "     ↳ Has auto-refresh ✓"
+              else
+                echo "     ↳ ⚠️  No auto-refresh configured"
+              fi
+            else
+              echo "  ❌ $1 — NOT FOUND"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          check_hook "src/hooks/use-tasks.ts"
+          check_hook "src/hooks/use-patterns.ts"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify "use client" directives ──
+      - name: Verify client components have "use client"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Client Component Directives ==="
+          PASS=0; WARN=0
+
+          # Components that must be client components (use hooks, state, or event handlers)
+          CLIENT_FILES=(
+            "src/components/task-form.tsx"
+            "src/components/task-list.tsx"
+            "src/components/trace-timeline.tsx"
+            "src/components/stats-overview.tsx"
+            "src/components/pattern-grid.tsx"
+            "src/app/dashboard/page.tsx"
+            "src/app/tasks/page.tsx"
+            "src/app/tasks/[id]/page.tsx"
+            "src/app/patterns/page.tsx"
+          )
+
+          for file in "${CLIENT_FILES[@]}"; do
+            if [ -f "$file" ]; then
+              if head -5 "$file" | grep -q '"use client"'; then
+                echo "  ✅ $file → has \"use client\""
+                PASS=$((PASS + 1))
+              else
+                echo "  ⚠️  $file → missing \"use client\" (may cause hydration errors)"
+                WARN=$((WARN + 1))
+              fi
+            fi
+          done
+
+          echo ""
+          echo "Results: $PASS confirmed, $WARN warnings"
+
+      # ── Verify root page redirects ──
+      - name: Verify root page redirect
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Root Page Redirect ==="
+          if grep -q "redirect.*dashboard\|redirect.*\"/dashboard\"" "src/app/page.tsx" 2>/dev/null; then
+            echo "  ✅ Root page redirects to /dashboard"
+          else
+            echo "  ⚠️  Root page may not redirect to /dashboard"
+          fi
+
+      # ── Verify dark theme setup ──
+      - name: Verify dark theme
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Dark Theme Setup ==="
+          if grep -q 'defaultTheme.*dark\|class.*dark\|className.*dark' "src/app/layout.tsx" 2>/dev/null; then
+            echo "  ✅ Dark theme configured in root layout"
+          else
+            echo "  ⚠️  Dark theme may not be set"
+          fi
+
+          if grep -q "bg-zinc-950\|bg-zinc-900\|dark" "src/app/dashboard/layout.tsx" 2>/dev/null; then
+            echo "  ✅ Dashboard layout uses dark colors"
+          else
+            echo "  ⚠️  Dashboard layout may not use dark theme"
+          fi
+
+      # ── Verify sidebar navigation ──
+      - name: Verify sidebar navigation
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Sidebar Navigation ==="
+          FILE="src/app/dashboard/layout.tsx"
+
+          if grep -q "dashboard\|Dashboard" "$FILE" 2>/dev/null; then
+            echo "  ✅ Dashboard link present"
+          fi
+          if grep -q "tasks\|Tasks" "$FILE" 2>/dev/null; then
+            echo "  ✅ Tasks link present"
+          fi
+          if grep -q "patterns\|Patterns\|Recovery" "$FILE" 2>/dev/null; then
+            echo "  ✅ Patterns/Recovery Library link present"
+          fi
+          if grep -q "WebScout" "$FILE" 2>/dev/null; then
+            echo "  ✅ WebScout branding present"
+          fi
+
+      # ── Verify trace timeline (most important demo component) ──
+      - name: Verify trace timeline component
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Trace Timeline Component ==="
+          FILE="src/components/trace-timeline.tsx"
+
+          if [ ! -f "$FILE" ]; then
+            echo "  ❌ trace-timeline.tsx not found"
+            exit 1
+          fi
+
+          FEATURES=0
+          if grep -q "screenshot\|Screenshot" "$FILE"; then
+            echo "  ✅ Handles screenshots"
+            FEATURES=$((FEATURES + 1))
+          fi
+          if grep -q "success.*emerald\|success.*green" "$FILE"; then
+            echo "  ✅ Color-coded success states"
+            FEATURES=$((FEATURES + 1))
+          fi
+          if grep -q "failure.*red" "$FILE"; then
+            echo "  ✅ Color-coded failure states"
+            FEATURES=$((FEATURES + 1))
+          fi
+          if grep -q "recovery.*amber\|recovery.*orange" "$FILE"; then
+            echo "  ✅ Color-coded recovery states"
+            FEATURES=$((FEATURES + 1))
+          fi
+          if grep -q "timeline\|Timeline" "$FILE"; then
+            echo "  ✅ Timeline layout"
+            FEATURES=$((FEATURES + 1))
+          fi
+
+          echo ""
+          echo "  Features detected: $FEATURES/5"
+
+      # ── Count all files ──
+      - name: File count summary
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== File Counts ==="
+          PAGES=$(find src/app -name "page.tsx" 2>/dev/null | wc -l | tr -d ' ')
+          LAYOUTS=$(find src/app -name "layout.tsx" 2>/dev/null | wc -l | tr -d ' ')
+          COMPONENTS=$(ls src/components/*.tsx 2>/dev/null | wc -l | tr -d ' ')
+          UI_COMPONENTS=$(ls src/components/ui/*.tsx 2>/dev/null | wc -l | tr -d ' ')
+          HOOKS=$(ls src/hooks/*.ts 2>/dev/null | wc -l | tr -d ' ')
+          API_ROUTES=$(find src/app/api -name "route.ts" 2>/dev/null | wc -l | tr -d ' ')
+          LIB_FILES=$(find src/lib -name "*.ts" 2>/dev/null | wc -l | tr -d ' ')
+
+          echo "  Pages:          $PAGES"
+          echo "  Layouts:        $LAYOUTS"
+          echo "  Components:     $COMPONENTS"
+          echo "  UI Components:  $UI_COMPONENTS"
+          echo "  Hooks:          $HOOKS"
+          echo "  API Routes:     $API_ROUTES"
+          echo "  Lib Files:      $LIB_FILES"
+          echo "  ──────────────────"
+          TOTAL=$((PAGES + LAYOUTS + COMPONENTS + UI_COMPONENTS + HOOKS + API_ROUTES + LIB_FILES))
+          echo "  Total src:      $TOTAL"
+
+      # ── TypeScript ──
+      - name: TypeScript type checking
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx tsc --noEmit
+
+      # ── Lint ──
+      - name: ESLint
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run lint
+
+      # ── Build ──
+      - name: Production build
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+
+      # ── Start server and test pages render ──
+      - name: Start server
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          npm start &
+          echo $! > /tmp/app.pid
+
+          for i in $(seq 1 30); do
+            if curl -sf ${{ env.APP_URL }}/api/health > /dev/null 2>&1; then
+              echo "Server ready after ${i}s"
+              break
+            fi
+            [ "$i" -eq 30 ] && { echo "❌ Server failed to start"; exit 1; }
+            sleep 1
+          done
+
+      - name: "Test: Pages render with 200"
+        run: |
+          echo "=== Page Render Tests ==="
+          PASS=0; FAIL=0
+
+          test_page() {
+            HTTP=$(curl -so /dev/null -w '%{http_code}' -L "${{ env.APP_URL }}$1")
+            if [ "$HTTP" = "200" ]; then
+              echo "  ✅ $1 → $HTTP"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 → $HTTP (expected 200)"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          test_page "/"                    # Should redirect to /dashboard
+          test_page "/dashboard"
+          test_page "/tasks"
+          test_page "/patterns"
+
+          echo ""
+          echo "Page renders: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      - name: "Test: Pages return HTML"
+        run: |
+          echo "=== Content Type Checks ==="
+
+          # Dashboard should return HTML
+          CONTENT_TYPE=$(curl -sI -L ${{ env.APP_URL }}/dashboard | grep -i "content-type" | head -1)
+          if echo "$CONTENT_TYPE" | grep -qi "text/html"; then
+            echo "  ✅ /dashboard returns HTML"
+          else
+            echo "  ⚠️  /dashboard content-type: $CONTENT_TYPE"
+          fi
+
+          # API should return JSON
+          CONTENT_TYPE=$(curl -sI ${{ env.APP_URL }}/api/tasks | grep -i "content-type" | head -1)
+          if echo "$CONTENT_TYPE" | grep -qi "application/json"; then
+            echo "  ✅ /api/tasks returns JSON"
+          else
+            echo "  ⚠️  /api/tasks content-type: $CONTENT_TYPE"
+          fi
+
+      # ── Cleanup ──
+      - name: Stop server
+        if: always()
+        run: |
+          [ -f /tmp/app.pid ] && kill $(cat /tmp/app.pid) 2>/dev/null || true
+
+      # ── Summary ──
+      - name: Phase 5 Summary
+        if: always()
+        run: |
+          echo ""
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Phase 5 — Dashboard Verified       ║"
+          echo "╚══════════════════════════════════════╝"

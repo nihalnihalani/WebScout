@@ -1,0 +1,264 @@
+# ============================================================================
+# Phase 1 — Project Scaffolding Verification
+# ============================================================================
+# Validates: dependencies install, shadcn/ui components present, theme setup,
+# Next.js config correct, TypeScript compiles, ESLint passes, build succeeds.
+#
+# Triggered: on push/PR when scaffolding files change.
+# ============================================================================
+
+name: "Phase 1 — Scaffolding"
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "webscout/package.json"
+      - "webscout/package-lock.json"
+      - "webscout/next.config.ts"
+      - "webscout/tsconfig.json"
+      - "webscout/tailwind.config.ts"
+      - "webscout/postcss.config.*"
+      - "webscout/components.json"
+      - "webscout/src/app/layout.tsx"
+      - "webscout/src/app/globals.css"
+      - "webscout/src/components/theme-provider.tsx"
+      - "webscout/src/components/ui/**"
+      - "webscout/src/lib/utils.ts"
+      - "webscout/.env.example"
+      - "webscout/docker-compose.yml"
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: phase-1-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  WORKING_DIR: webscout
+
+jobs:
+  verify-scaffolding:
+    name: Verify Scaffolding
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      # ── Install ──
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      # ── Verify Core Dependencies ──
+      - name: Verify core dependencies are installed
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Core Dependencies ==="
+          PASS=0; FAIL=0
+
+          check_dep() {
+            if [ -d "node_modules/$1" ]; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 — NOT FOUND"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          check_dep "@browserbasehq/stagehand"
+          check_dep "@browserbasehq/sdk"
+          check_dep "zod"
+          check_dep "openai"
+          check_dep "redis"
+          check_dep "swr"
+          check_dep "lucide-react"
+          check_dep "clsx"
+          check_dep "tailwind-merge"
+          check_dep "next-themes"
+          check_dep "weave"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify shadcn/ui ──
+      - name: Verify shadcn/ui components
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking shadcn/ui Components ==="
+          PASS=0; FAIL=0
+
+          check_component() {
+            if [ -f "src/components/ui/$1.tsx" ]; then
+              echo "  ✅ $1.tsx"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1.tsx — NOT FOUND"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          check_component "button"
+          check_component "card"
+          check_component "badge"
+          check_component "input"
+          check_component "textarea"
+          check_component "table"
+          check_component "tabs"
+          check_component "separator"
+          check_component "skeleton"
+          check_component "dropdown-menu"
+
+          TOTAL=$(ls src/components/ui/*.tsx 2>/dev/null | wc -l | tr -d ' ')
+          echo ""
+          echo "Total UI components found: $TOTAL"
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify Key Files ──
+      - name: Verify project structure
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Key Files ==="
+          PASS=0; FAIL=0
+
+          check_file() {
+            if [ -f "$1" ]; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 — NOT FOUND"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          # Config files
+          check_file "package.json"
+          check_file "next.config.ts"
+          check_file "tsconfig.json"
+          check_file "docker-compose.yml"
+          check_file ".env.example"
+          check_file "components.json"
+
+          # Theme & layout
+          check_file "src/components/theme-provider.tsx"
+          check_file "src/app/layout.tsx"
+          check_file "src/app/globals.css"
+          check_file "src/app/page.tsx"
+
+          # Utils
+          check_file "src/lib/utils.ts"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify next.config.ts has serverExternalPackages ──
+      - name: Verify Next.js config
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking next.config.ts ==="
+          if grep -q "serverExternalPackages" next.config.ts; then
+            echo "  ✅ serverExternalPackages configured"
+          else
+            echo "  ❌ serverExternalPackages not found in next.config.ts"
+            echo "     Expected: redis, @browserbasehq/stagehand, @browserbasehq/sdk, weave"
+            exit 1
+          fi
+
+      # ── Verify theme-provider uses next-themes ──
+      - name: Verify theme provider
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Theme Setup ==="
+          if grep -q "next-themes" src/components/theme-provider.tsx 2>/dev/null; then
+            echo "  ✅ ThemeProvider uses next-themes"
+          else
+            echo "  ❌ ThemeProvider missing or doesn't use next-themes"
+            exit 1
+          fi
+
+          if grep -q "suppressHydrationWarning" src/app/layout.tsx; then
+            echo "  ✅ Layout has suppressHydrationWarning"
+          else
+            echo "  ⚠️  Layout missing suppressHydrationWarning (dark mode may flicker)"
+          fi
+
+          if grep -q "defaultTheme" src/app/layout.tsx; then
+            echo "  ✅ Layout sets defaultTheme"
+          else
+            echo "  ⚠️  Layout doesn't set defaultTheme"
+          fi
+
+      # ── Verify .env.example has all required vars ──
+      - name: Verify environment variable template
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking .env.example ==="
+          PASS=0; FAIL=0
+
+          check_var() {
+            if grep -q "$1" .env.example 2>/dev/null; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 — not in .env.example"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          check_var "BROWSERBASE_API_KEY"
+          check_var "BROWSERBASE_PROJECT_ID"
+          check_var "OPENAI_API_KEY"
+          check_var "REDIS_URL"
+          check_var "WANDB_API_KEY"
+          check_var "WEAVE_PROJECT"
+          check_var "NEXT_PUBLIC_APP_URL"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── TypeScript ──
+      - name: TypeScript type checking
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx tsc --noEmit
+
+      # ── Lint ──
+      - name: ESLint
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run lint
+
+      # ── Build ──
+      - name: Production build
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        env:
+          BROWSERBASE_API_KEY: ci_placeholder
+          BROWSERBASE_PROJECT_ID: ci_placeholder
+          OPENAI_API_KEY: ci_placeholder
+          REDIS_URL: redis://localhost:6379
+          WANDB_API_KEY: ci_placeholder
+          WEAVE_PROJECT: webscout
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+      # ── Summary ──
+      - name: Phase 1 Summary
+        if: always()
+        run: |
+          echo ""
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Phase 1 — Scaffolding Verified     ║"
+          echo "╚══════════════════════════════════════╝"

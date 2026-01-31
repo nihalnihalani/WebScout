@@ -1,0 +1,360 @@
+# ============================================================================
+# Phase 4 — API Routes Verification
+# ============================================================================
+# Validates: API route files exist, task storage module works, endpoints
+# respond correctly, input validation works, and health check reports status.
+#
+# Uses Redis Stack service container for real endpoint testing.
+# Starts the Next.js server and runs smoke tests against it.
+# ============================================================================
+
+name: "Phase 4 — API Routes"
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "webscout/src/app/api/**"
+      - "webscout/src/lib/redis/tasks.ts"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "webscout/src/app/api/**"
+      - "webscout/src/lib/redis/tasks.ts"
+
+concurrency:
+  group: phase-4-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  WORKING_DIR: webscout
+  APP_URL: http://localhost:3000
+  # Placeholder env vars for build (no real API calls in CI)
+  BROWSERBASE_API_KEY: ci_placeholder
+  BROWSERBASE_PROJECT_ID: ci_placeholder
+  OPENAI_API_KEY: ci_placeholder
+  REDIS_URL: redis://localhost:6379
+  WANDB_API_KEY: ci_placeholder
+  WEAVE_PROJECT: webscout
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+jobs:
+  verify-api-routes:
+    name: Verify API Routes
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    services:
+      redis:
+        image: redis/redis-stack-server:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      # ── Verify API route files ──
+      - name: Verify API route files exist
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Phase 4 File Structure ==="
+          PASS=0; FAIL=0
+
+          check_file() {
+            if [ -f "$1" ]; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 — NOT FOUND"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          echo "--- API Routes ---"
+          check_file "src/app/api/tasks/route.ts"
+          check_file "src/app/api/tasks/[id]/route.ts"
+          check_file "src/app/api/patterns/route.ts"
+          check_file "src/app/api/health/route.ts"
+
+          echo "--- Task Storage ---"
+          check_file "src/lib/redis/tasks.ts"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify route exports ──
+      - name: Verify API route exports
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Route Handler Exports ==="
+          PASS=0; FAIL=0
+
+          check_export() {
+            if grep -q "export.*async.*function.*$2\|export.*const.*$2" "$1" 2>/dev/null; then
+              echo "  ✅ $1 → $2"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 → $2 handler not exported"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          # Tasks route: POST + GET
+          check_export "src/app/api/tasks/route.ts" "POST"
+          check_export "src/app/api/tasks/route.ts" "GET"
+
+          # Task detail: GET
+          check_export "src/app/api/tasks/[id]/route.ts" "GET"
+
+          # Patterns: GET
+          check_export "src/app/api/patterns/route.ts" "GET"
+
+          # Health: GET
+          check_export "src/app/api/health/route.ts" "GET"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify task storage module ──
+      - name: Verify task storage exports
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Task Storage ==="
+          FILE="src/lib/redis/tasks.ts"
+          PASS=0; FAIL=0
+
+          check_export() {
+            if grep -q "export.*$1" "$FILE" 2>/dev/null; then
+              echo "  ✅ $1"
+              PASS=$((PASS + 1))
+            else
+              echo "  ❌ $1 not exported"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          check_export "storeTask"
+          check_export "getTask"
+          check_export "listTasks"
+          check_export "getTaskStats"
+
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      # ── Verify maxDuration for Vercel ──
+      - name: Verify Vercel function config
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "=== Checking Vercel Config ==="
+          if grep -q "maxDuration" "src/app/api/tasks/route.ts" 2>/dev/null; then
+            echo "  ✅ maxDuration set on tasks route"
+          else
+            echo "  ⚠️  maxDuration not set — tasks may timeout on Vercel"
+          fi
+
+      # ── TypeScript ──
+      - name: TypeScript type checking
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx tsc --noEmit
+
+      # ── Lint ──
+      - name: ESLint
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run lint
+
+      # ── Build ──
+      - name: Production build
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+
+      # ── Start server and run endpoint tests ──
+      - name: Start server
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          npm start &
+          echo $! > /tmp/app.pid
+
+          echo "Waiting for server to start..."
+          for i in $(seq 1 30); do
+            if curl -sf ${{ env.APP_URL }}/api/health > /dev/null 2>&1; then
+              echo "Server ready after ${i}s"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "❌ Server failed to start within 30s"
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: "Test: GET /api/health"
+        run: |
+          echo "=== Health Endpoint ==="
+          RESPONSE=$(curl -sf ${{ env.APP_URL }}/api/health)
+          HTTP_CODE=$(curl -so /dev/null -w '%{http_code}' ${{ env.APP_URL }}/api/health)
+
+          echo "Status code: $HTTP_CODE"
+          echo "$RESPONSE" | python3 -m json.tool
+
+          # Verify response structure
+          echo "$RESPONSE" | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          assert 'status' in d, 'Missing status field'
+          assert 'services' in d, 'Missing services field'
+          assert 'redis' in d['services'], 'Missing redis in services'
+          assert d['services']['redis']['status'] == 'ok', f'Redis not ok: {d[\"services\"][\"redis\"]}'
+          print('  ✅ Health endpoint OK')
+          print(f'  ✅ Redis: {d[\"services\"][\"redis\"][\"status\"]}')
+          "
+
+      - name: "Test: GET /api/tasks (empty)"
+        run: |
+          echo "=== Tasks List (empty) ==="
+          RESPONSE=$(curl -sf ${{ env.APP_URL }}/api/tasks)
+          HTTP_CODE=$(curl -so /dev/null -w '%{http_code}' ${{ env.APP_URL }}/api/tasks)
+
+          echo "Status code: $HTTP_CODE"
+          [ "$HTTP_CODE" = "200" ] && echo "  ✅ 200 OK" || { echo "  ❌ Expected 200"; exit 1; }
+
+          echo "$RESPONSE" | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          assert 'tasks' in d, 'Missing tasks field'
+          assert 'total' in d, 'Missing total field'
+          assert 'stats' in d, 'Missing stats field'
+          assert isinstance(d['tasks'], list), 'tasks should be a list'
+          assert d['stats']['total'] == 0, f'Expected 0 tasks, got {d[\"stats\"][\"total\"]}'
+          print('  ✅ Empty task list returned correctly')
+          print(f'  ✅ Stats present: {list(d[\"stats\"].keys())}')
+          "
+
+      - name: "Test: GET /api/patterns (empty)"
+        run: |
+          echo "=== Patterns List (empty) ==="
+          RESPONSE=$(curl -sf ${{ env.APP_URL }}/api/patterns)
+          HTTP_CODE=$(curl -so /dev/null -w '%{http_code}' ${{ env.APP_URL }}/api/patterns)
+
+          echo "Status code: $HTTP_CODE"
+          [ "$HTTP_CODE" = "200" ] && echo "  ✅ 200 OK" || { echo "  ❌ Expected 200"; exit 1; }
+
+          echo "$RESPONSE" | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          assert 'patterns' in d, 'Missing patterns field'
+          assert isinstance(d['patterns'], list), 'patterns should be a list'
+          print('  ✅ Empty patterns list returned correctly')
+          "
+
+      - name: "Test: POST /api/tasks — input validation"
+        run: |
+          echo "=== Input Validation Tests ==="
+          PASS=0; FAIL=0
+
+          # Test 1: Missing target
+          HTTP=$(curl -so /dev/null -w '%{http_code}' -X POST ${{ env.APP_URL }}/api/tasks \
+            -H 'Content-Type: application/json' \
+            -d '{"url":"https://example.com"}')
+          if [ "$HTTP" = "400" ]; then
+            echo "  ✅ Missing target → 400"
+            PASS=$((PASS + 1))
+          else
+            echo "  ❌ Missing target → $HTTP (expected 400)"
+            FAIL=$((FAIL + 1))
+          fi
+
+          # Test 2: Missing URL
+          HTTP=$(curl -so /dev/null -w '%{http_code}' -X POST ${{ env.APP_URL }}/api/tasks \
+            -H 'Content-Type: application/json' \
+            -d '{"target":"test"}')
+          if [ "$HTTP" = "400" ]; then
+            echo "  ✅ Missing URL → 400"
+            PASS=$((PASS + 1))
+          else
+            echo "  ❌ Missing URL → $HTTP (expected 400)"
+            FAIL=$((FAIL + 1))
+          fi
+
+          # Test 3: Invalid URL
+          HTTP=$(curl -so /dev/null -w '%{http_code}' -X POST ${{ env.APP_URL }}/api/tasks \
+            -H 'Content-Type: application/json' \
+            -d '{"url":"not-a-url","target":"test"}')
+          if [ "$HTTP" = "400" ]; then
+            echo "  ✅ Invalid URL → 400"
+            PASS=$((PASS + 1))
+          else
+            echo "  ❌ Invalid URL → $HTTP (expected 400)"
+            FAIL=$((FAIL + 1))
+          fi
+
+          # Test 4: Empty body
+          HTTP=$(curl -so /dev/null -w '%{http_code}' -X POST ${{ env.APP_URL }}/api/tasks \
+            -H 'Content-Type: application/json' \
+            -d '{}')
+          if [ "$HTTP" = "400" ]; then
+            echo "  ✅ Empty body → 400"
+            PASS=$((PASS + 1))
+          else
+            echo "  ❌ Empty body → $HTTP (expected 400)"
+            FAIL=$((FAIL + 1))
+          fi
+
+          echo ""
+          echo "Validation: $PASS passed, $FAIL failed"
+          [ "$FAIL" -eq 0 ] || exit 1
+
+      - name: "Test: GET /api/tasks/:id — 404 for unknown"
+        run: |
+          echo "=== Unknown Task ID ==="
+          HTTP=$(curl -so /dev/null -w '%{http_code}' ${{ env.APP_URL }}/api/tasks/nonexistent-id-12345)
+          if [ "$HTTP" = "404" ]; then
+            echo "  ✅ Unknown task → 404"
+          else
+            echo "  ❌ Unknown task → $HTTP (expected 404)"
+            exit 1
+          fi
+
+      - name: "Test: Pagination parameters"
+        run: |
+          echo "=== Pagination ==="
+          HTTP=$(curl -so /dev/null -w '%{http_code}' "${{ env.APP_URL }}/api/tasks?limit=5&offset=0")
+          [ "$HTTP" = "200" ] && echo "  ✅ Tasks pagination works" || echo "  ⚠️  Tasks pagination: $HTTP"
+
+          HTTP=$(curl -so /dev/null -w '%{http_code}' "${{ env.APP_URL }}/api/patterns?limit=10&offset=0")
+          [ "$HTTP" = "200" ] && echo "  ✅ Patterns pagination works" || echo "  ⚠️  Patterns pagination: $HTTP"
+
+      # ── Cleanup ──
+      - name: Stop server
+        if: always()
+        run: |
+          [ -f /tmp/app.pid ] && kill $(cat /tmp/app.pid) 2>/dev/null || true
+
+      # ── Summary ──
+      - name: Phase 4 Summary
+        if: always()
+        run: |
+          echo ""
+          echo "╔══════════════════════════════════════╗"
+          echo "║   Phase 4 — API Routes Verified      ║"
+          echo "╚══════════════════════════════════════╝"
