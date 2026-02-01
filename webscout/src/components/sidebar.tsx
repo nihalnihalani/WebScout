@@ -16,7 +16,6 @@ import {
     ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "./theme-toggle";
 
 const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -83,9 +82,7 @@ export function Sidebar() {
             </nav>
 
             {/* Footer */}
-            <div className="mt-auto space-y-2 pt-6 border-t border-sidebar-border">
-                {/* Theme Toggle */}
-                <ThemeToggle showLabel={!collapsed} />
+            <div className="mt-auto space-y-4 pt-6 border-t border-sidebar-border">
                 {/* Collapse Toggle */}
                 <button
                     onClick={() => setCollapsed(!collapsed)}
@@ -104,7 +101,7 @@ export function Sidebar() {
 
                 {/* External Link */}
                 <a
-                    href="https://wandb.ai/alhinai/webscout/weave"
+                    href="https://wandb.ai/alhinai/projects"
                     target="_blank"
                     rel="noopener noreferrer"
                     title={collapsed ? "View in Weave" : undefined}

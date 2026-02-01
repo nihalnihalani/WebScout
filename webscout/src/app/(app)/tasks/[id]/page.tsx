@@ -109,10 +109,10 @@ export default function TaskDetailPage({
 
           <div className="flex items-center gap-2 shrink-0">
             <a
-              href={`${WEAVE_CALLS_URL}?filter=task_id%3D${task.id}`}
+              href="https://wandb.ai/alhinai/projects"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 transition-colors"
+              className="px-3 py-1.5 rounded-lg border border-yellow-500/20 bg-yellow-500/5 text-yellow-400 hover:bg-yellow-500/10 transition-colors text-xs font-medium flex items-center gap-2"
             >
               <ExternalLink className="w-3 h-3" />
               View in Weave
@@ -170,26 +170,24 @@ export default function TaskDetailPage({
                     Score
                   </span>
                   <span
-                    className={`text-sm font-bold ${
-                      task.quality_score >= 70
-                        ? "text-emerald-400"
-                        : task.quality_score >= 40
-                          ? "text-amber-400"
-                          : "text-red-400"
-                    }`}
+                    className={`text-sm font-bold ${task.quality_score >= 70
+                      ? "text-emerald-400"
+                      : task.quality_score >= 40
+                        ? "text-amber-400"
+                        : "text-red-400"
+                      }`}
                   >
                     {task.quality_score}/100
                   </span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-zinc-700">
                   <div
-                    className={`h-2 rounded-full transition-all duration-500 ${
-                      task.quality_score >= 70
-                        ? "bg-emerald-500"
-                        : task.quality_score >= 40
-                          ? "bg-amber-500"
-                          : "bg-red-500"
-                    }`}
+                    className={`h-2 rounded-full transition-all duration-500 ${task.quality_score >= 70
+                      ? "bg-emerald-500"
+                      : task.quality_score >= 40
+                        ? "bg-amber-500"
+                        : "bg-red-500"
+                      }`}
                     style={{ width: `${task.quality_score}%` }}
                   />
                 </div>
