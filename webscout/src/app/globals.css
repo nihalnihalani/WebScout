@@ -77,12 +77,15 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --grid-color: rgba(0, 0, 0, 0.03);
 }
 
 .dark {
-  --background: oklch(0.1 0 0); /* Deep black/zinc */
+  --background: oklch(0.1 0 0);
+  /* Deep black/zinc */
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.12 0 0); /* Slightly lighter than bg */
+  --card: oklch(0.12 0 0);
+  /* Slightly lighter than bg */
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.12 0 0);
   --popover-foreground: oklch(0.985 0 0);
@@ -111,17 +114,19 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --grid-color: rgba(255, 255, 255, 0.03);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground antialiased selection:bg-emerald-500/30 selection:text-emerald-200;
     background-image: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
-                      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(to right, var(--grid-color) 1px, transparent 1px);
     background-size: 100% 100%, 40px 40px, 40px 40px;
   }
 }
@@ -131,6 +136,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -138,9 +144,12 @@
 }
 
 @keyframes pulse-slow {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -150,22 +159,52 @@
   0% {
     transform: translateY(-100%);
   }
+
   100% {
     transform: translateY(100%);
   }
 }
 
 @keyframes crt-flicker {
-  0% { opacity: 0.1; }
-  5% { opacity: 0.15; }
-  10% { opacity: 0.1; }
-  15% { opacity: 0.16; }
-  20% { opacity: 0.1; }
-  50% { opacity: 0.1; }
-  55% { opacity: 0.12; }
-  60% { opacity: 0.1; }
-  90% { opacity: 0.1; }
-  100% { opacity: 0.1; }
+  0% {
+    opacity: 0.1;
+  }
+
+  5% {
+    opacity: 0.15;
+  }
+
+  10% {
+    opacity: 0.1;
+  }
+
+  15% {
+    opacity: 0.16;
+  }
+
+  20% {
+    opacity: 0.1;
+  }
+
+  50% {
+    opacity: 0.1;
+  }
+
+  55% {
+    opacity: 0.12;
+  }
+
+  60% {
+    opacity: 0.1;
+  }
+
+  90% {
+    opacity: 0.1;
+  }
+
+  100% {
+    opacity: 0.1;
+  }
 }
 
 .animate-fade-in-up {

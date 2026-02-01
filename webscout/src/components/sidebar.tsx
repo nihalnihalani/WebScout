@@ -16,6 +16,7 @@ import {
     ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./theme-toggle";
 
 const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -82,7 +83,9 @@ export function Sidebar() {
             </nav>
 
             {/* Footer */}
-            <div className="mt-auto space-y-4 pt-6 border-t border-sidebar-border">
+            <div className="mt-auto space-y-2 pt-6 border-t border-sidebar-border">
+                {/* Theme Toggle */}
+                <ThemeToggle showLabel={!collapsed} />
                 {/* Collapse Toggle */}
                 <button
                     onClick={() => setCollapsed(!collapsed)}
