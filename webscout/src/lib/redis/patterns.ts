@@ -13,7 +13,8 @@ export async function listPatterns(
       LIMIT: { from: offset, size: limit },
       RETURN: [
         "url_pattern", "target", "working_selector",
-        "approach", "success_count", "created_at",
+        "approach", "success_count", "failure_count",
+        "created_at", "last_succeeded_at", "last_failed_at",
       ],
     }) as unknown as SearchReply;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,7 +25,10 @@ export async function listPatterns(
       working_selector: doc.value.working_selector as string,
       approach: doc.value.approach as "extract" | "act" | "agent",
       success_count: parseInt(doc.value.success_count as string, 10) || 0,
+      failure_count: parseInt(doc.value.failure_count as string, 10) || 0,
       created_at: parseInt(doc.value.created_at as string, 10) || 0,
+      last_succeeded_at: doc.value.last_succeeded_at ? parseInt(doc.value.last_succeeded_at as string, 10) : undefined,
+      last_failed_at: doc.value.last_failed_at ? parseInt(doc.value.last_failed_at as string, 10) : undefined,
     }));
     return { patterns, total: results.total };
   } catch (error) {
@@ -44,7 +48,10 @@ export async function getPattern(patternId: string): Promise<PagePattern | null>
     working_selector: data.working_selector,
     approach: data.approach as "extract" | "act" | "agent",
     success_count: parseInt(data.success_count, 10) || 0,
+    failure_count: parseInt(data.failure_count, 10) || 0,
     created_at: parseInt(data.created_at, 10) || 0,
+    last_succeeded_at: data.last_succeeded_at ? parseInt(data.last_succeeded_at, 10) : undefined,
+    last_failed_at: data.last_failed_at ? parseInt(data.last_failed_at, 10) : undefined,
   };
 }
 

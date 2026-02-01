@@ -22,7 +22,7 @@ const approachLabels: Record<string, string> = {
 export function PatternCard({ pattern }: PatternCardProps) {
   return (
     <Card className="group relative overflow-hidden bg-zinc-900/40 border-zinc-800 p-5 hover:border-emerald-500/30 hover:bg-zinc-900/60 transition-all duration-300 backdrop-blur-sm">
-      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-white/5 to-transparent -mr-10 -mt-10 rounded-full blur-xl group-hover:from-emerald-500/10 transition-colors" />
+      <div className="absolute top-0 right-0 w-20 h-20 bg-linear-to-bl from-white/5 to-transparent -mr-10 -mt-10 rounded-full blur-xl group-hover:from-emerald-500/10 transition-colors" />
       
       {/* URL Pattern */}
       <div className="relative flex items-center gap-3 mb-4">

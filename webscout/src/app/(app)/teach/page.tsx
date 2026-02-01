@@ -200,7 +200,7 @@ export default function TeachPage() {
         <div className="absolute top-8 right-0 w-48 h-48 bg-purple-600/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative">
           <div className="flex items-center gap-3 mb-2">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-linear-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20">
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -423,7 +423,7 @@ export default function TeachPage() {
                 disabled={isTeaching}
                 className={cn(
                   "relative px-6 h-10 font-semibold text-sm",
-                  "bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500",
+                  "bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500",
                   "text-white shadow-lg shadow-violet-500/20",
                   "transition-all duration-200",
                   isTeaching && "opacity-80"

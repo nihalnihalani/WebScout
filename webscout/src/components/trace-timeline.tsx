@@ -119,7 +119,7 @@ export function TraceTimeline({ steps }: TraceTimelineProps) {
                         </Badge>
                       </div>
                       {/* Detail text */}
-                      <p className="text-sm text-zinc-400 break-words font-mono leading-relaxed">
+                      <p className="text-sm text-zinc-400 wrap-break-word font-mono leading-relaxed">
                         {step.detail}
                       </p>
                     </div>

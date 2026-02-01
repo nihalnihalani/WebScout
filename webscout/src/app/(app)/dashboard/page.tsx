@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTasks } from "@/hooks/use-tasks";
 import { useMetrics } from "@/hooks/use-metrics";
 import { StatsOverview } from "@/components/stats-overview";
@@ -9,6 +10,8 @@ import { LearningCurve } from "@/components/learning-curve";
 import { ImprovementReport } from "@/components/improvement-report";
 import { LearningTimeline } from "@/components/learning-timeline";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Database } from "lucide-react";
 
 const defaultStats = {
   total: 0,
@@ -24,13 +27,25 @@ const defaultStats = {
 export default function DashboardPage() {
   const { data, isLoading, mutate } = useTasks();
   const { data: metricsData } = useMetrics();
+  const [seeding, setSeeding] = useState(false);
+
+  const seedDemo = async () => {
+    setSeeding(true);
+    try {
+      await fetch("/api/demo/reset", { method: "POST" });
+      await fetch("/api/demo/seed", { method: "POST" });
+      mutate();
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   return (
     <div className="space-y-12 pb-12">
       {/* Hero Section */}
       <div className="relative isolate overflow-hidden rounded-3xl bg-zinc-900 border border-white/5 px-6 py-12 sm:px-12 xl:py-16">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,theme(colors.zinc.800),theme(colors.zinc.950))] opacity-20" />
-        <div className="absolute inset-y-0 right-0 -z-10 w-[200%] origin-bottom-left skew-x-[-30deg] bg-white/5 shadow-xl shadow-emerald-600/10 ring-1 ring-white/10 sm:w-[100%]" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,var(--color-zinc-800),var(--color-zinc-950))] opacity-20" />
+        <div className="absolute inset-y-0 right-0 -z-10 w-[200%] origin-bottom-left skew-x-[-30deg] bg-white/5 shadow-xl shadow-emerald-600/10 ring-1 ring-white/10 sm:w-full" />
         
         <div className="mx-auto max-w-2xl lg:mx-0">
           <div className="flex items-center gap-x-3 mb-6">
@@ -48,6 +63,17 @@ export default function DashboardPage() {
             Autonomous web extraction engine with self-healing capabilities.
             Monitor learning progress, execute tasks, and analyze pattern recovery in real-time.
           </p>
+          {(!data?.tasks?.length || data.tasks.length === 0) && (
+            <Button
+              onClick={seedDemo}
+              disabled={seeding}
+              variant="outline"
+              className="mt-4 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+            >
+              <Database className="w-4 h-4 mr-2" />
+              {seeding ? "Seeding..." : "Load Demo Data"}
+            </Button>
+          )}
         </div>
       </div>
 

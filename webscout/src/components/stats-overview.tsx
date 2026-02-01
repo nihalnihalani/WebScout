@@ -79,7 +79,7 @@ export function StatsOverview({ stats, generation }: StatsProps) {
                 animationDelay: `${index * 100}ms`
               }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="p-6 relative z-10">
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-xl ${card.bg} group-hover:scale-110 transition-transform duration-300 ring-1 ring-inset ring-white/10`}>
@@ -91,9 +91,21 @@ export function StatsOverview({ stats, generation }: StatsProps) {
                   </div>
                 </div>
                 
-                {/* Decorative sparkline/bar */}
+                {/* Progress bar */}
                 <div className="mt-4 h-1 w-full bg-zinc-800/50 rounded-full overflow-hidden">
-                   <div className={`h-full ${card.color.replace('text-', 'bg-')} opacity-50 w-2/3 group-hover:w-full transition-all duration-700 ease-out`} />
+                   <div
+                     className={`h-full ${card.color.replace('text-', 'bg-')} opacity-50 transition-all duration-700 ease-out`}
+                     style={{
+                       width: (() => {
+                         const v = String(value);
+                         const num = parseFloat(v);
+                         if (card.key === "cache_hit_rate" || card.key === "recovery_rate") return isNaN(num) ? "0%" : `${Math.min(num, 100)}%`;
+                         if (card.key === "patterns_learned") return `${Math.min(Number(value) * 10, 100)}%`;
+                         if (card.key === "total") return `${Math.min(Number(value) * 5, 100)}%`;
+                         return "50%";
+                       })(),
+                     }}
+                   />
                 </div>
               </div>
             </Card>

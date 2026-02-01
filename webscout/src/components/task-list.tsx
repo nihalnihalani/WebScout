@@ -16,6 +16,12 @@ interface TaskListProps {
   tasks: TaskResult[];
 }
 
+function getQualityColor(score: number): string {
+  if (score >= 70) return "text-emerald-400 bg-emerald-500/15 border-emerald-500/20";
+  if (score >= 40) return "text-amber-400 bg-amber-500/15 border-amber-500/20";
+  return "text-red-400 bg-red-500/15 border-red-500/20";
+}
+
 function getStatusBadge(task: TaskResult) {
   if (task.used_cached_pattern) {
     return (
@@ -93,6 +99,13 @@ export function TaskList({ tasks }: TaskListProps) {
               </div>
               <div className="flex items-center gap-3 ml-4 shrink-0">
                 {getStatusBadge(task)}
+                {task.quality_score != null && (
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getQualityColor(task.quality_score)}`}
+                  >
+                    Q: {task.quality_score}/100
+                  </span>
+                )}
                 <span className="text-xs text-zinc-600 w-16 text-right">
                   {task.steps.length} steps
                 </span>

@@ -47,6 +47,12 @@ export interface GeminiPageAnalysis {
   reasoning: string;
 }
 
+export interface GeminiScreenshotAnalysis {
+  visualElements: string[];
+  suggestedApproach: string;
+  confidence: number;
+}
+
 // ---------------------------------------------------------------------------
 // Traced operations
 // ---------------------------------------------------------------------------
@@ -186,6 +192,79 @@ export const geminiAnalyzePage = createTracedOp(
     summarize: (result: GeminiPageAnalysis) => ({
       "webscout.gemini_strategy": result.extractionStrategy,
       "webscout.gemini_selectors_count": result.suggestedSelectors.length,
+    }),
+  }
+);
+
+/**
+ * Use Gemini's multimodal capabilities to analyse a screenshot of a page
+ * and identify visual elements relevant to the extraction target.
+ *
+ * This leverages Gemini's vision model — a capability unique to the Gemini
+ * integration in this project (OpenAI is only used for embeddings).
+ */
+export const geminiAnalyzeScreenshot = createTracedOp(
+  "geminiAnalyzeScreenshot",
+  async function geminiAnalyzeScreenshot(
+    screenshotBase64: string,
+    targetDescription: string
+  ): Promise<GeminiScreenshotAnalysis> {
+    const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const prompt = [
+      "You are a visual web-page analysis expert.",
+      "You are given a screenshot of a web page and a description of the data",
+      "a user wants to extract from it.",
+      "",
+      `Target data: ${targetDescription}`,
+      "",
+      "Analyse the visual layout and respond with ONLY a JSON object (no markdown fences) containing:",
+      '  "visualElements": an array of strings describing the key UI elements visible on the page that are relevant to the target data (e.g. "table with 3 columns", "card grid", "sidebar navigation"),',
+      '  "suggestedApproach": a brief recommendation on how to extract the target data based on the visual layout,',
+      '  "confidence": a number between 0 and 1 indicating how confident you are that the target data is visible on the page.',
+    ].join("\n");
+
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          mimeType: "image/png",
+          data: screenshotBase64,
+        },
+      },
+    ]);
+    const text = result.response.text().trim();
+
+    try {
+      const parsed = JSON.parse(text) as GeminiScreenshotAnalysis;
+      return {
+        visualElements: parsed.visualElements ?? [],
+        suggestedApproach: parsed.suggestedApproach ?? "",
+        confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0,
+      };
+    } catch {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]) as GeminiScreenshotAnalysis;
+        return {
+          visualElements: parsed.visualElements ?? [],
+          suggestedApproach: parsed.suggestedApproach ?? "",
+          confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0,
+        };
+      }
+      throw new Error(
+        `Gemini returned unparseable response: ${text.substring(0, 200)}`
+      );
+    }
+  },
+  {
+    callDisplayName: (
+      _screenshotBase64: string,
+      targetDescription: string
+    ) => `gemini-screenshot:${targetDescription.substring(0, 40)}`,
+    summarize: (result: GeminiScreenshotAnalysis) => ({
+      "webscout.gemini_visual_elements": result.visualElements.length,
+      "webscout.gemini_visual_confidence": result.confidence,
     }),
   }
 );

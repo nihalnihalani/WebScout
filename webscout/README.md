@@ -215,7 +215,7 @@ cd webscout
 npm install
 
 # Set up environment variables
-cp .env.local.example .env.local
+cp .env.example .env
 # Fill in your API keys (see Environment Variables below)
 
 # Start Redis Stack (required for vector search)

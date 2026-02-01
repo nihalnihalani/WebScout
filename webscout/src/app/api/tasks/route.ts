@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { learningScrape } from "@/lib/engine/scraper";
-import { storeTask, listTasks, getTaskStats } from "@/lib/redis/tasks";
+import { storeTask, getTask, listTasks, getTaskStats } from "@/lib/redis/tasks";
 import { getPatternCount } from "@/lib/redis/patterns";
+import { addScoreToCall } from "@/lib/tracing/weave";
 import type { TaskRequest } from "@/lib/utils/types";
 
 export const maxDuration = 60;
@@ -37,17 +38,111 @@ export async function POST(request: NextRequest) {
 
     console.log(`[API] New task: extract "${target}" from ${url}`);
 
-    const result = await learningScrape({ url, target });
+    // Create a placeholder task immediately so the UI can track it
+    const taskId = crypto.randomUUID();
+    const pendingTask = {
+      id: taskId,
+      url,
+      target,
+      status: "running" as const,
+      result: null,
+      used_cached_pattern: false,
+      recovery_attempted: false,
+      pattern_id: undefined,
+      screenshots: [],
+      steps: [
+        { action: "queued", status: "info" as const, detail: "Task queued — starting browser automation...", timestamp: Date.now() },
+      ],
+      created_at: Date.now(),
+      completed_at: undefined,
+    };
 
-    await storeTask(result);
+    await storeTask(pendingTask as import("@/lib/utils/types").TaskResult);
 
-    console.log(
-      `[API] Task ${result.id} completed: ${result.status}` +
-      (result.used_cached_pattern ? " (cached)" : "") +
-      (result.recovery_attempted ? " (recovered)" : "")
-    );
+    // Execute the scrape in the background (non-blocking)
+    // Use .invoke() to capture Weave call ID for the closed feedback loop
+    const executeTask = async () => {
+      if (typeof learningScrape.invoke === "function") {
+        const [result, call] = await learningScrape.invoke({ url, target, id: taskId });
+        result.trace_id = call?.traceId;
+        result.weave_call_id = call?.id;
+        return result;
+      }
+      return learningScrape({ url, target, id: taskId });
+    };
 
-    return NextResponse.json(result);
+    executeTask().then(async (result) => {
+      // The scraper's buildResult() strips large base64 data to prevent Weave
+      // serialization overflow. Merge the final status/metadata into the complete
+      // task data already flushed to Redis by flushProgress().
+      const existing = await getTask(taskId);
+      const finalTask = {
+        ...(existing || result),
+        status: result.status,
+        result: result.result,
+        used_cached_pattern: result.used_cached_pattern,
+        recovery_attempted: result.recovery_attempted,
+        pattern_id: result.pattern_id,
+        session_url: result.session_url || existing?.session_url,
+        trace_id: result.trace_id,
+        weave_call_id: result.weave_call_id,
+        quality_score: result.quality_score,
+        quality_summary: result.quality_summary,
+        completed_at: result.completed_at,
+        // Always prefer the full steps/screenshots from Redis (written by flushProgress)
+        // since buildResult() strips base64 data from the return value
+        steps: (existing?.steps && existing.steps.length >= result.steps.length)
+          ? existing.steps
+          : result.steps,
+        screenshots: (existing?.screenshots && existing.screenshots.length > 0)
+          ? existing.screenshots
+          : result.screenshots,
+      } as import("@/lib/utils/types").TaskResult;
+
+      await storeTask(finalTask);
+      console.log(
+        `[API] Task ${result.id} completed: ${result.status}` +
+        (result.used_cached_pattern ? " (cached)" : "") +
+        (result.recovery_attempted ? " (recovered)" : "") +
+        (result.trace_id ? ` (trace: ${result.trace_id.substring(0, 12)}...)` : "")
+      );
+
+      // Attach retrospective scores to the Weave call (Phase 5 feedback loop)
+      if (result.weave_call_id) {
+        Promise.all([
+          addScoreToCall(result.weave_call_id, "success", result.status === "success"),
+          addScoreToCall(
+            result.weave_call_id,
+            "quality",
+            result.quality_score ?? 0,
+            result.quality_summary
+          ),
+          addScoreToCall(
+            result.weave_call_id,
+            "used_cache",
+            result.used_cached_pattern
+          ),
+          addScoreToCall(
+            result.weave_call_id,
+            "recovery_needed",
+            result.recovery_attempted
+          ),
+        ]).catch(console.warn);
+      }
+    }).catch(async (error) => {
+      console.error(`[API] Task ${taskId} failed:`, error);
+      // Merge error into existing Redis data (which has full steps from flushProgress)
+      const existing = await getTask(taskId).catch(() => null);
+      const errorStep = { action: "error", status: "failure" as const, detail: (error as Error).message, timestamp: Date.now() };
+      await storeTask({
+        ...(existing || pendingTask),
+        status: "failed",
+        steps: [...(existing?.steps || pendingTask.steps), errorStep],
+        completed_at: Date.now(),
+      } as import("@/lib/utils/types").TaskResult).catch(console.error);
+    });
+
+    return NextResponse.json(pendingTask);
   } catch (error) {
     console.error("[API] Task execution error:", error);
     return NextResponse.json(
