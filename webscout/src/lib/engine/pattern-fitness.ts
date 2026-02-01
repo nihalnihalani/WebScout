@@ -25,7 +25,15 @@ export function computePatternFitness(pattern: PagePattern): number {
   const denominator = 1 + (z * z) / total;
   const center = p + (z * z) / (2 * total);
   const spread = z * Math.sqrt((p * (1 - p) + (z * z) / (4 * total)) / total);
-  const wilsonLower = (center - spread) / denominator;
+  const rawWilsonLower = (center - spread) / denominator;
+
+  // Blend Wilson with raw success rate for low-observation patterns.
+  // Wilson is too conservative with few observations (1 success → 0.21),
+  // making it impossible for new patterns to ever hit cache. We linearly
+  // blend toward the raw rate as observations increase.
+  const blendThreshold = 5;
+  const blendFactor = Math.min(total / blendThreshold, 1);
+  const wilsonLower = blendFactor * rawWilsonLower + (1 - blendFactor) * p;
 
   // Exponential time decay (30-day half-life)
   const now = Date.now();

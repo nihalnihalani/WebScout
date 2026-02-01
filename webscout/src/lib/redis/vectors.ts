@@ -103,6 +103,47 @@ export const storePattern = createTracedOp(
     const embeddingText = `${data.url_pattern} ${data.target}`;
     const embedding = await generateEmbedding(embeddingText);
     const embeddingBuffer = Buffer.from(new Float32Array(embedding).buffer);
+
+    // Check for an existing pattern with the same url_pattern + target to
+    // avoid duplicates.  If found, update the existing pattern instead.
+    try {
+      const existing = await client.ft.search(
+        INDEX_NAME,
+        `*=>[KNN 1 @embedding $BLOB AS vector_score]`,
+        {
+          PARAMS: { BLOB: embeddingBuffer },
+          SORTBY: { BY: "vector_score", DIRECTION: "ASC" },
+          DIALECT: 2,
+          RETURN: ["url_pattern", "target", "vector_score"],
+        }
+      ) as unknown as SearchReply;
+
+      if (existing.documents && existing.documents.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const doc = existing.documents[0] as any;
+        const distance = parseFloat(doc.value.vector_score as string);
+        const similarity = 1 - distance / 2;
+        const sameUrl = doc.value.url_pattern === data.url_pattern;
+        const sameTarget = doc.value.target === data.target;
+
+        if (similarity > 0.95 && sameUrl && sameTarget) {
+          // Update existing pattern instead of creating a duplicate
+          const existingId = doc.id as string;
+          await Promise.all([
+            client.hIncrBy(existingId, "success_count", 1),
+            client.hSet(existingId, {
+              last_succeeded_at: Date.now().toString(),
+              working_selector: data.working_selector,
+            }),
+          ]);
+          console.log(`[Redis] Updated existing pattern: ${existingId} (similarity=${(similarity * 100).toFixed(1)}%)`);
+          return existingId;
+        }
+      }
+    } catch {
+      // If dedup search fails, fall through to create a new pattern
+    }
+
     const id = `${PREFIX}${crypto.randomUUID()}`;
     await client.hSet(id, {
       url_pattern: data.url_pattern,
@@ -115,7 +156,7 @@ export const storePattern = createTracedOp(
       last_succeeded_at: Date.now().toString(),
       embedding: embeddingBuffer,
     });
-    console.log(`[Redis] Stored pattern: ${id}`);
+    console.log(`[Redis] Stored new pattern: ${id}`);
     return id;
   },
   {

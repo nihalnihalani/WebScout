@@ -31,7 +31,16 @@ export async function GET(
   }
 
   // Verify the task exists before opening the stream.
-  const initialTask = await getTask(id);
+  // Retry a few times to handle the race condition where the client connects
+  // before the POST handler finishes writing the task to Redis.
+  let initialTask = await getTask(id);
+  if (!initialTask) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      await new Promise((r) => setTimeout(r, 200));
+      initialTask = await getTask(id);
+      if (initialTask) break;
+    }
+  }
   if (!initialTask) {
     return new Response(
       JSON.stringify({ error: "Task not found", id }),
