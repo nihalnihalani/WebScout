@@ -26,6 +26,9 @@ export const ensureVectorIndex = createTracedOp(
           approach: { type: SCHEMA_FIELD_TYPE.TAG },
           created_at: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: true },
           success_count: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: true },
+          failure_count: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: true },
+          last_succeeded_at: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: true },
+          last_failed_at: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: true },
           embedding: {
             type: SCHEMA_FIELD_TYPE.VECTOR,
             ALGORITHM: SCHEMA_VECTOR_FIELD_ALGORITHM.HNSW,
@@ -60,7 +63,8 @@ export const searchSimilarPatterns = createTracedOp(
           DIALECT: 2,
           RETURN: [
             "url_pattern", "target", "working_selector",
-            "approach", "vector_score", "success_count", "created_at",
+            "approach", "vector_score", "success_count", "failure_count",
+            "created_at", "last_succeeded_at", "last_failed_at",
           ],
         }
       ) as unknown as SearchReply;
@@ -75,7 +79,10 @@ export const searchSimilarPatterns = createTracedOp(
         working_selector: doc.value.working_selector as string,
         approach: doc.value.approach as "extract" | "act" | "agent",
         success_count: parseInt(doc.value.success_count as string, 10) || 0,
+        failure_count: parseInt(doc.value.failure_count as string, 10) || 0,
         created_at: parseInt(doc.value.created_at as string, 10) || 0,
+        last_succeeded_at: doc.value.last_succeeded_at ? parseInt(doc.value.last_succeeded_at as string, 10) : undefined,
+        last_failed_at: doc.value.last_failed_at ? parseInt(doc.value.last_failed_at as string, 10) : undefined,
         score: 1 - parseFloat(doc.value.vector_score as string) / 2,
       }));
     } catch (error) {
@@ -104,6 +111,8 @@ export const storePattern = createTracedOp(
       approach: data.approach,
       created_at: Date.now().toString(),
       success_count: "1",
+      failure_count: "0",
+      last_succeeded_at: Date.now().toString(),
       embedding: embeddingBuffer,
     });
     console.log(`[Redis] Stored pattern: ${id}`);
@@ -121,5 +130,34 @@ export const incrementPatternSuccess = createTracedOp(
   async function incrementPatternSuccess(patternId: string): Promise<void> {
     const client = await getRedisClient();
     await client.hIncrBy(patternId, "success_count", 1);
+  }
+);
+
+export const incrementPatternFailure = createTracedOp(
+  "incrementPatternFailure",
+  async function incrementPatternFailure(patternId: string): Promise<void> {
+    const client = await getRedisClient();
+    await Promise.all([
+      client.hIncrBy(patternId, "failure_count", 1),
+      client.hSet(patternId, "last_failed_at", Date.now().toString()),
+    ]);
+    console.log(`[Redis] Pattern failure recorded: ${patternId}`);
+  },
+  {
+    summarize: () => ({ "webscout.pattern_failure_recorded": 1 }),
+  }
+);
+
+export const updatePatternLastSuccess = createTracedOp(
+  "updatePatternLastSuccess",
+  async function updatePatternLastSuccess(patternId: string): Promise<void> {
+    const client = await getRedisClient();
+    await Promise.all([
+      client.hIncrBy(patternId, "success_count", 1),
+      client.hSet(patternId, "last_succeeded_at", Date.now().toString()),
+    ]);
+  },
+  {
+    summarize: () => ({ "webscout.pattern_success_updated": 1 }),
   }
 );

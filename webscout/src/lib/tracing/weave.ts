@@ -96,4 +96,141 @@ export async function savePatternDataset(
   return null;
 }
 
+/**
+ * Construct a Weave trace URL for the current project.
+ * Returns the base calls view URL that can be opened in a browser.
+ */
+export function getTraceUrl(entity?: string): string {
+  const project = process.env.WEAVE_PROJECT || "webscout";
+  const org = entity || "webscout";
+  return `https://wandb.ai/${org}/${project}/weave/calls`;
+}
+
+/**
+ * Log an evaluation result as a traced Weave operation.
+ * This creates a visible entry in the Weave calls view so judges
+ * can see improvement scores tracked over time.
+ */
+export const logEvaluation = createTracedOp(
+  "webscout.evaluation",
+  async (evaluationData: {
+    improvement_score: number;
+    improvement_grade: string;
+    speed_factor: string;
+    patterns_learned: number;
+    tasks_analyzed: number;
+    cohorts: {
+      first: Record<string, unknown>;
+      middle: Record<string, unknown>;
+      last: Record<string, unknown>;
+    };
+    improvements: Array<Record<string, unknown>>;
+    summary: Record<string, unknown>;
+  }) => {
+    return evaluationData;
+  },
+  {
+    summarize: (result) => ({
+      "webscout.eval.improvement_score": result.improvement_score,
+      "webscout.eval.improvement_grade": result.improvement_grade,
+      "webscout.eval.speed_factor": result.speed_factor,
+      "webscout.eval.patterns_learned": result.patterns_learned,
+      "webscout.eval.tasks_analyzed": result.tasks_analyzed,
+    }),
+    callDisplayName: () => `evaluation-${new Date().toISOString().slice(0, 10)}`,
+  }
+);
+
+/**
+ * Create an invocable traced op that returns [result, Call] via .invoke().
+ * The Call object contains call.id (Weave call ID) and call.traceId.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createInvocableOp<T extends (...args: any[]) => any>(
+  name: string,
+  fn: T,
+  options?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    summarize?: (result: any) => Record<string, unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    callDisplayName?: (...args: any[]) => string;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): T & { invoke?: (...args: any[]) => Promise<[Awaited<ReturnType<T>>, any]> } {
+  try {
+    const op = weave.op(fn, {
+      name,
+      ...(options?.summarize ? { summarize: options.summarize } : {}),
+      ...(options?.callDisplayName ? { callDisplayName: options.callDisplayName } : {}),
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return op as any;
+  } catch {
+    return fn as T & { invoke?: never };
+  }
+}
+
+/**
+ * Convert a base64 screenshot into a Weave image for display in the Weave UI.
+ */
+export function createWeaveImage(base64: string): unknown {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const weaveImage = (weave as any).weaveImage;
+    if (typeof weaveImage === "function") {
+      // Strip data URI prefix if present
+      const raw = base64.replace(/^data:image\/\w+;base64,/, "");
+      return weaveImage({ data: Buffer.from(raw, "base64"), imageType: "png" });
+    }
+  } catch {
+    // weaveImage not available
+  }
+  return base64;
+}
+
+/**
+ * Attach a retrospective score to an existing Weave call via the feedback API.
+ * This enables the closed feedback loop: execute → score → learn.
+ *
+ * Uses the trace server's feedback/create endpoint, which is the correct
+ * way to add annotations to Weave calls (the client.addScore method is
+ * designed for the Evaluation framework's internal scorer-based scoring).
+ */
+export async function addScoreToCall(
+  callId: string,
+  scorerName: string,
+  value: number | boolean,
+  comment?: string
+): Promise<void> {
+  try {
+    if (!weaveClient) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const client = weaveClient as any;
+    const projectId = client.projectId as string | undefined;
+    const traceApi = client.traceServerApi;
+
+    if (!projectId || !traceApi) return;
+
+    const numericValue = typeof value === "boolean" ? (value ? 1 : 0) : value;
+    const weaveRef = `weave:///${projectId}/call/${callId}`;
+
+    // Use the trace server feedback API to create feedback/annotation
+    if (typeof traceApi?.feedback?.feedbackCreateFeedbackCreatePost === "function") {
+      await traceApi.feedback.feedbackCreateFeedbackCreatePost({
+        project_id: projectId,
+        weave_ref: weaveRef,
+        feedback_type: `webscout.${scorerName}`,
+        payload: {
+          value: numericValue,
+          ...(comment ? { comment } : {}),
+        },
+        creator: "webscout-agent",
+      });
+      console.log(`[Weave] Feedback added: ${scorerName}=${numericValue} on call ${callId.substring(0, 12)}...`);
+    }
+  } catch (error) {
+    console.warn("[Weave] addScoreToCall failed:", (error as Error).message);
+  }
+}
+
 export { weave };

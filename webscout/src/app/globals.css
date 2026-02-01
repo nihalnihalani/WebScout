@@ -6,8 +6,6 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -157,12 +155,29 @@
   }
 }
 
+@keyframes crt-flicker {
+  0% { opacity: 0.1; }
+  5% { opacity: 0.15; }
+  10% { opacity: 0.1; }
+  15% { opacity: 0.16; }
+  20% { opacity: 0.1; }
+  50% { opacity: 0.1; }
+  55% { opacity: 0.12; }
+  60% { opacity: 0.1; }
+  90% { opacity: 0.1; }
+  100% { opacity: 0.1; }
+}
+
 .animate-fade-in-up {
   animation: fade-in-up 0.5s ease-out forwards;
 }
 
 .animate-pulse-slow {
   animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.animate-crt-flicker {
+  animation: crt-flicker 0.15s infinite;
 }
 
 /* Glassmorphism utilities */
@@ -176,7 +191,8 @@
 
 /* Custom scrollbar for execution log */
 .scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
@@ -184,10 +200,9 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgb(63 63 70 / 0.5);
-  border-radius: 2px;
+  @apply bg-zinc-800/50 rounded-full hover:bg-emerald-500/30 transition-colors cursor-pointer border border-transparent bg-clip-content;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgb(63 63 70 / 0.8);
+.scrollbar-thin::-webkit-scrollbar-corner {
+  background: transparent;
 }

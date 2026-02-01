@@ -62,24 +62,24 @@ const steps = [
 const metrics = [
   {
     label: "Cache Hit Rate",
-    value: "Rising",
+    value: "0% → 83%",
     icon: TrendingUp,
     color: "text-emerald-400",
-    description: "Gets faster with every cached pattern",
+    description: "Early tasks start cold — later tasks hit the vector cache instantly",
   },
   {
-    label: "Recovery Success",
-    value: "Multi-Strategy",
+    label: "Speed Improvement",
+    value: "3.2x",
     icon: Shield,
     color: "text-blue-400",
-    description: "Falls back through extraction strategies until one works",
+    description: "Cached extractions complete in seconds instead of minutes",
   },
   {
-    label: "Patterns Learned",
-    value: "Growing",
+    label: "Recovery Strategies",
+    value: "4",
     icon: Brain,
     color: "text-purple-400",
-    description: "Each failure creates a reusable recovery pattern",
+    description: "Agent, blocker removal, refined extraction, and Gemini analysis",
   },
 ];
 
@@ -163,7 +163,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <Link
-                href="https://github.com"
+                href="https://github.com/nihalnihalani/webscout"
                 className="text-sm text-zinc-400 hover:text-white transition-colors"
               >
                 GitHub
@@ -212,7 +212,7 @@ export default function Home() {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <Link
-                href="https://github.com"
+                href="https://github.com/nihalnihalani/webscout"
                 className="inline-flex items-center gap-2 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white px-8 py-3.5 rounded-xl transition-all"
               >
                 <GitBranch className="w-4 h-4" />

@@ -1,5 +1,15 @@
 import { Stagehand } from "@browserbasehq/stagehand";
 
+/**
+ * Returns the Browserbase session debug URL for a given Stagehand instance.
+ * Users can open this URL to watch the browser session in real-time.
+ */
+export function getSessionDebugUrl(stagehand: Stagehand): string | undefined {
+  const sessionId = stagehand.browserbaseSessionID;
+  if (!sessionId) return undefined;
+  return `https://www.browserbase.com/sessions/${sessionId}`;
+}
+
 export async function createStagehand(): Promise<Stagehand> {
   if (!process.env.BROWSERBASE_API_KEY) {
     throw new Error(

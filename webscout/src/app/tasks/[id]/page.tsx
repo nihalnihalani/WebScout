@@ -14,9 +14,15 @@ import {
   XCircle,
   Zap,
   RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
+
+const WEAVE_CALLS_URL =
+  process.env.NEXT_PUBLIC_WEAVE_URL
+    ? `${process.env.NEXT_PUBLIC_WEAVE_URL}/calls`
+    : "https://wandb.ai/webscout/webscout/weave/calls";
 
 export default function TaskDetailPage({
   params,
@@ -101,20 +107,44 @@ export default function TaskDetailPage({
             </div>
           </div>
 
-          <Badge
-            className={
-              task.status === "success"
-                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                : "bg-red-500/20 text-red-400 border-red-500/30"
-            }
-          >
-            {task.status === "success" ? (
-              <CheckCircle className="w-3 h-3 mr-1" />
-            ) : (
-              <XCircle className="w-3 h-3 mr-1" />
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href={`${WEAVE_CALLS_URL}?filter=task_id%3D${task.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+              View in Weave
+            </a>
+            {task.quality_score != null && (
+              <Badge
+                className={
+                  task.quality_score >= 70
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    : task.quality_score >= 40
+                      ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                      : "bg-red-500/20 text-red-400 border-red-500/30"
+                }
+              >
+                Q: {task.quality_score}/100
+              </Badge>
             )}
-            {task.status}
-          </Badge>
+            <Badge
+              className={
+                task.status === "success"
+                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                  : "bg-red-500/20 text-red-400 border-red-500/30"
+              }
+            >
+              {task.status === "success" ? (
+                <CheckCircle className="w-3 h-3 mr-1" />
+              ) : (
+                <XCircle className="w-3 h-3 mr-1" />
+              )}
+              {task.status}
+            </Badge>
+          </div>
         </div>
 
         {task.result && (
@@ -125,6 +155,51 @@ export default function TaskDetailPage({
             <pre className="text-sm text-emerald-400 whitespace-pre-wrap overflow-auto max-h-48 font-mono">
               {JSON.stringify(task.result, null, 2)}
             </pre>
+          </div>
+        )}
+
+        {task.quality_score != null && (
+          <div className="mt-4 p-4 rounded-lg bg-zinc-800 border border-zinc-700">
+            <p className="text-xs text-zinc-500 mb-3 font-medium uppercase tracking-wide">
+              Quality Assessment
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm font-medium text-zinc-300">
+                    Score
+                  </span>
+                  <span
+                    className={`text-sm font-bold ${
+                      task.quality_score >= 70
+                        ? "text-emerald-400"
+                        : task.quality_score >= 40
+                          ? "text-amber-400"
+                          : "text-red-400"
+                    }`}
+                  >
+                    {task.quality_score}/100
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-zinc-700">
+                  <div
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      task.quality_score >= 70
+                        ? "bg-emerald-500"
+                        : task.quality_score >= 40
+                          ? "bg-amber-500"
+                          : "bg-red-500"
+                    }`}
+                    style={{ width: `${task.quality_score}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            {task.quality_summary && (
+              <p className="mt-3 text-sm text-zinc-400 leading-relaxed">
+                {task.quality_summary}
+              </p>
+            )}
           </div>
         )}
       </Card>

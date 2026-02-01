@@ -46,11 +46,6 @@ export function TaskForm({ onTaskComplete }: TaskFormProps) {
 
   return (
     <Card className="bg-zinc-900 border-zinc-800 p-6">
-      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <Globe className="w-5 h-5 text-emerald-500" />
-        New Scraping Task
-      </h3>
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="text-sm text-zinc-400 mb-1 block">URL</label>
@@ -130,6 +125,42 @@ export function TaskForm({ onTaskComplete }: TaskFormProps) {
             disabled={loading}
           >
             quotes.toscrape.com - first quote and author
+          </button>
+          <br />
+          <button
+            type="button"
+            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors text-left"
+            onClick={() => {
+              setUrl("https://news.ycombinator.com");
+              setTarget("top 3 story titles");
+            }}
+            disabled={loading}
+          >
+            news.ycombinator.com - top 3 story titles
+          </button>
+          <br />
+          <button
+            type="button"
+            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors text-left"
+            onClick={() => {
+              setUrl("https://github.com/trending");
+              setTarget("top trending repository name and description");
+            }}
+            disabled={loading}
+          >
+            github.com/trending - top trending repo name and description
+          </button>
+          <br />
+          <button
+            type="button"
+            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors text-left"
+            onClick={() => {
+              setUrl("https://example.com");
+              setTarget("main heading text");
+            }}
+            disabled={loading}
+          >
+            example.com - main heading text
           </button>
         </div>
       </div>

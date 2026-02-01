@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTasks } from "@/hooks/use-tasks";
 import { useMetrics } from "@/hooks/use-metrics";
 import { StatsOverview } from "@/components/stats-overview";
@@ -9,6 +10,8 @@ import { LearningCurve } from "@/components/learning-curve";
 import { ImprovementReport } from "@/components/improvement-report";
 import { LearningTimeline } from "@/components/learning-timeline";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Database } from "lucide-react";
 
 const defaultStats = {
   total: 0,
@@ -24,6 +27,18 @@ const defaultStats = {
 export default function DashboardPage() {
   const { data, isLoading, mutate } = useTasks();
   const { data: metricsData } = useMetrics();
+  const [seeding, setSeeding] = useState(false);
+
+  const seedDemo = async () => {
+    setSeeding(true);
+    try {
+      await fetch("/api/demo/reset", { method: "POST" });
+      await fetch("/api/demo/seed", { method: "POST" });
+      mutate();
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   return (
     <div className="space-y-12 pb-12">
@@ -48,6 +63,17 @@ export default function DashboardPage() {
             Autonomous web extraction engine with self-healing capabilities.
             Monitor learning progress, execute tasks, and analyze pattern recovery in real-time.
           </p>
+          {(!data?.tasks?.length || data.tasks.length === 0) && (
+            <Button
+              onClick={seedDemo}
+              disabled={seeding}
+              variant="outline"
+              className="mt-4 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+            >
+              <Database className="w-4 h-4 mr-2" />
+              {seeding ? "Seeding..." : "Load Demo Data"}
+            </Button>
+          )}
         </div>
       </div>
 

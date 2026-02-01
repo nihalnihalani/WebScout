@@ -6,12 +6,16 @@ export interface PagePattern {
   approach: "extract" | "act" | "agent";
   created_at: number;
   success_count: number;
+  failure_count: number;
+  last_succeeded_at?: number;
+  last_failed_at?: number;
   score?: number;
 }
 
 export interface TaskRequest {
   url: string;
   target: string;
+  id?: string;
 }
 
 export interface TaskResult {
@@ -25,6 +29,10 @@ export interface TaskResult {
   recovery_attempted: boolean;
   pattern_id?: string;
   trace_id?: string;
+  weave_call_id?: string;
+  session_url?: string;
+  quality_score?: number;
+  quality_summary?: string;
   screenshots: string[];
   steps: TaskStep[];
   created_at: number;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRedisClient } from "@/lib/redis/client";
 import { getPatternCount } from "@/lib/redis/patterns";
+import { logEvaluation } from "@/lib/tracing/weave";
 import type { TaskResult } from "@/lib/utils/types";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ interface CohortMetrics {
   cacheHitRate: number;
   recoveryRate: number;
   patternsUsed: number;
+  avgQualityScore: number;
 }
 
 interface ImprovementMetric {
@@ -41,7 +43,7 @@ interface ImprovementMetric {
 
 function computeCohortMetrics(tasks: TaskResult[], label: string): CohortMetrics {
   if (tasks.length === 0) {
-    return { label, taskCount: 0, successRate: 0, avgDurationMs: 0, cacheHitRate: 0, recoveryRate: 0, patternsUsed: 0 };
+    return { label, taskCount: 0, successRate: 0, avgDurationMs: 0, cacheHitRate: 0, recoveryRate: 0, patternsUsed: 0, avgQualityScore: 0 };
   }
 
   const successful = tasks.filter(t => t.status === "success").length;
@@ -57,6 +59,13 @@ function computeCohortMetrics(tasks: TaskResult[], label: string): CohortMetrics
     ? durations.reduce((a, b) => a + b, 0) / durations.length
     : 0;
 
+  const qualityScores = tasks
+    .filter(t => t.quality_score != null)
+    .map(t => t.quality_score!);
+  const avgQualityScore = qualityScores.length > 0
+    ? Math.round(qualityScores.reduce((a, b) => a + b, 0) / qualityScores.length)
+    : 0;
+
   return {
     label,
     taskCount: tasks.length,
@@ -65,6 +74,7 @@ function computeCohortMetrics(tasks: TaskResult[], label: string): CohortMetrics
     cacheHitRate: (cached / tasks.length) * 100,
     recoveryRate: recoveryAttempted > 0 ? (recoverySucceeded / recoveryAttempted) * 100 : 0,
     patternsUsed: patterns,
+    avgQualityScore,
   };
 }
 
@@ -200,6 +210,21 @@ export async function GET() {
       unit: "%",
     });
 
+    // Add Avg Quality metric if any tasks have quality scores
+    if (firstMetrics.avgQualityScore > 0 || lastMetrics.avgQualityScore > 0) {
+      improvements.push({
+        metric: "Avg Quality",
+        firstCohort: firstMetrics.avgQualityScore,
+        lastCohort: lastMetrics.avgQualityScore,
+        improvement: lastMetrics.avgQualityScore - firstMetrics.avgQualityScore,
+        improvementPct: firstMetrics.avgQualityScore > 0
+          ? `+${(((lastMetrics.avgQualityScore - firstMetrics.avgQualityScore) / firstMetrics.avgQualityScore) * 100).toFixed(0)}%`
+          : "N/A",
+        direction: lastMetrics.avgQualityScore > firstMetrics.avgQualityScore ? "better" : lastMetrics.avgQualityScore === firstMetrics.avgQualityScore ? "same" : "worse",
+        unit: "/100",
+      });
+    }
+
     const improvementScore = computeImprovementScore(improvements);
     // Count patterns from tasks (works even without vector index)
     let patternsLearned = 0;
@@ -217,12 +242,41 @@ export async function GET() {
       ? (firstMetrics.avgDurationMs / lastMetrics.avgDurationMs).toFixed(1)
       : "N/A";
 
+    const improvementGrade = improvementScore >= 70 ? "A" : improvementScore >= 50 ? "B" : improvementScore >= 30 ? "C" : "D";
+
+    // Log evaluation to Weave for tracking improvement over time
+    try {
+      await logEvaluation({
+        improvement_score: improvementScore,
+        improvement_grade: improvementGrade,
+        speed_factor: speedFactor,
+        patterns_learned: patternsLearned,
+        tasks_analyzed: tasks.length,
+        cohorts: {
+          first: firstMetrics as unknown as Record<string, unknown>,
+          middle: middleMetrics as unknown as Record<string, unknown>,
+          last: lastMetrics as unknown as Record<string, unknown>,
+        },
+        improvements: improvements as unknown as Array<Record<string, unknown>>,
+        summary: {
+          headline: improvementScore >= 50
+            ? `WebScout improved ${improvementScore}% — ${speedFactor}x faster with ${Math.round(lastMetrics.cacheHitRate)}% cache utilization`
+            : `WebScout is learning — ${patternsLearned} patterns cached so far`,
+          success_rate_change: `${firstMetrics.successRate.toFixed(0)}% → ${lastMetrics.successRate.toFixed(0)}%`,
+          speed_change: `${(firstMetrics.avgDurationMs / 1000).toFixed(1)}s → ${(lastMetrics.avgDurationMs / 1000).toFixed(1)}s`,
+          cache_change: `${firstMetrics.cacheHitRate.toFixed(0)}% → ${lastMetrics.cacheHitRate.toFixed(0)}%`,
+        },
+      });
+    } catch {
+      // Non-critical — Weave logging is best-effort
+    }
+
     return NextResponse.json({
       status: "evaluated",
       tasks_analyzed: tasks.length,
       evaluation: {
         improvement_score: improvementScore,
-        improvement_grade: improvementScore >= 70 ? "A" : improvementScore >= 50 ? "B" : improvementScore >= 30 ? "C" : "D",
+        improvement_grade: improvementGrade,
         speed_factor: speedFactor,
         patterns_learned: patternsLearned,
         cohorts: {

@@ -91,9 +91,21 @@ export function StatsOverview({ stats, generation }: StatsProps) {
                   </div>
                 </div>
                 
-                {/* Decorative sparkline/bar */}
+                {/* Progress bar */}
                 <div className="mt-4 h-1 w-full bg-zinc-800/50 rounded-full overflow-hidden">
-                   <div className={`h-full ${card.color.replace('text-', 'bg-')} opacity-50 w-2/3 group-hover:w-full transition-all duration-700 ease-out`} />
+                   <div
+                     className={`h-full ${card.color.replace('text-', 'bg-')} opacity-50 transition-all duration-700 ease-out`}
+                     style={{
+                       width: (() => {
+                         const v = String(value);
+                         const num = parseFloat(v);
+                         if (card.key === "cache_hit_rate" || card.key === "recovery_rate") return isNaN(num) ? "0%" : `${Math.min(num, 100)}%`;
+                         if (card.key === "patterns_learned") return `${Math.min(Number(value) * 10, 100)}%`;
+                         if (card.key === "total") return `${Math.min(Number(value) * 5, 100)}%`;
+                         return "50%";
+                       })(),
+                     }}
+                   />
                 </div>
               </div>
             </Card>

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { LiveSessionViewer } from "@/components/live-session-viewer";
 import { ExecutionLog } from "@/components/execution-log";
-import { useLiveTask } from "@/hooks/use-live-task";
+import { useTaskStream } from "@/hooks/use-task-stream";
 import {
   Play,
   Loader2,
@@ -25,7 +25,7 @@ export default function LiveViewPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
 
-  const { task, isRunning, error: taskError } = useLiveTask(activeTaskId);
+  const { task, isRunning, error: taskError } = useTaskStream(activeTaskId);
 
   // Duration timer
   useEffect(() => {
@@ -251,6 +251,39 @@ export default function LiveViewPage() {
           >
             quotes.toscrape.com
           </button>
+          <button
+            type="button"
+            className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors px-1.5 py-0.5 rounded bg-zinc-800/50 hover:bg-zinc-800"
+            disabled={submitting || isRunning}
+            onClick={() => {
+              setUrl("https://news.ycombinator.com");
+              setTarget("top 3 story titles");
+            }}
+          >
+            news.ycombinator.com
+          </button>
+          <button
+            type="button"
+            className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors px-1.5 py-0.5 rounded bg-zinc-800/50 hover:bg-zinc-800"
+            disabled={submitting || isRunning}
+            onClick={() => {
+              setUrl("https://github.com/trending");
+              setTarget("top trending repository name and description");
+            }}
+          >
+            github.com/trending
+          </button>
+          <button
+            type="button"
+            className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors px-1.5 py-0.5 rounded bg-zinc-800/50 hover:bg-zinc-800"
+            disabled={submitting || isRunning}
+            onClick={() => {
+              setUrl("https://example.com");
+              setTarget("main heading text");
+            }}
+          >
+            example.com
+          </button>
         </div>
       </Card>
 
@@ -258,7 +291,7 @@ export default function LiveViewPage() {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
         {/* LEFT: Browser session viewer */}
         <div className="min-h-[300px] lg:min-h-0">
-          <LiveSessionViewer task={task} isRunning={isRunning} />
+          <LiveSessionViewer task={task} isRunning={isRunning} sessionUrl={task?.session_url} />
         </div>
 
         {/* RIGHT: Execution log */}

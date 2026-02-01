@@ -109,7 +109,7 @@ export function TraceTimeline({ steps }: TraceTimelineProps) {
                         <Badge
                           variant="outline"
                           className={`text-[10px] px-2 py-0 h-5 uppercase tracking-wider ${
-                            statusBadgeColors[step.status]
+                            statusColors[step.status]
                           }`}
                         >
                           {step.status}
