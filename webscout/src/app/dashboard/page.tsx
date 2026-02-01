@@ -6,6 +6,7 @@ import { StatsOverview } from "@/components/stats-overview";
 import { TaskForm } from "@/components/task-form";
 import { TaskList } from "@/components/task-list";
 import { LearningCurve } from "@/components/learning-curve";
+import { ImprovementReport } from "@/components/improvement-report";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const defaultStats = {
@@ -45,8 +46,11 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Learning Curve Chart — THE key visual for judges */}
-      <LearningCurve />
+      {/* Learning Curve Chart + Improvement Report side by side */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <LearningCurve />
+        <ImprovementReport />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TaskForm onTaskComplete={() => mutate()} />

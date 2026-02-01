@@ -8,6 +8,7 @@ import {
   Brain,
   Activity,
   ExternalLink,
+  Award,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tasks", label: "Tasks", icon: ListTodo },
   { href: "/patterns", label: "Recovery Library", icon: Brain },
+  { href: "/evaluation", label: "Evaluation", icon: Award },
 ];
 
 export default function DashboardLayout({
