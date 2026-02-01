@@ -33,7 +33,7 @@ export function Sidebar() {
     return (
         <aside
             className={cn(
-                "border-r border-zinc-800 bg-zinc-900/50 flex flex-col transition-all duration-300 ease-in-out",
+                "border-r border-sidebar-border bg-sidebar/50 flex flex-col transition-all duration-300 ease-in-out",
                 collapsed ? "w-16 p-3" : "w-64 p-6"
             )}
         >
@@ -43,11 +43,11 @@ export function Sidebar() {
                     <Activity className="w-6 h-6 text-emerald-500" />
                 ) : (
                     <>
-                        <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
                             <Activity className="w-6 h-6 text-emerald-500" />
                             WebScout
                         </h1>
-                        <p className="text-xs text-zinc-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             Every failed click makes it smarter
                         </p>
                     </>
@@ -70,8 +70,8 @@ export function Sidebar() {
                                 "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                                 collapsed && "justify-center",
                                 isActive
-                                    ? "bg-zinc-800 text-white"
-                                    : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                             )}
                         >
                             <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -82,11 +82,11 @@ export function Sidebar() {
             </nav>
 
             {/* Footer */}
-            <div className="mt-auto space-y-4 pt-6 border-t border-zinc-800">
+            <div className="mt-auto space-y-4 pt-6 border-t border-sidebar-border">
                 {/* Collapse Toggle */}
                 <button
                     onClick={() => setCollapsed(!collapsed)}
-                    className="flex items-center justify-center w-full gap-2 px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-colors"
+                    className="flex items-center justify-center w-full gap-2 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
                     title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
                     {collapsed ? (
@@ -116,14 +116,14 @@ export function Sidebar() {
 
                 {/* Powered By */}
                 {!collapsed && (
-                    <div className="space-y-1 text-xs text-zinc-600">
+                    <div className="space-y-1 text-xs text-muted-foreground/60">
                         <p>Powered by</p>
-                        <p className="text-zinc-500">Browserbase + Stagehand</p>
-                        <p className="text-zinc-500">Weave (W&B)</p>
-                        <p className="text-zinc-500">Redis + RediSearch</p>
-                        <p className="text-zinc-500">OpenAI</p>
-                        <p className="text-zinc-500">Google Cloud (Gemini)</p>
-                        <p className="text-zinc-500">Vercel</p>
+                        <p className="text-muted-foreground/80">Browserbase + Stagehand</p>
+                        <p className="text-muted-foreground/80">Weave (W&B)</p>
+                        <p className="text-muted-foreground/80">Redis + RediSearch</p>
+                        <p className="text-muted-foreground/80">OpenAI</p>
+                        <p className="text-muted-foreground/80">Google Cloud (Gemini)</p>
+                        <p className="text-muted-foreground/80">Vercel</p>
                     </div>
                 )}
             </div>

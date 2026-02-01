@@ -45,10 +45,14 @@ export function TaskForm({ onTaskComplete }: TaskFormProps) {
   };
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800 p-6">
+    <Card className="bg-card border-border p-6 shadow-lg">
+      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+        <Globe className="w-5 h-5 text-muted-foreground" />
+        New Scrape Task
+      </h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="text-sm text-zinc-400 mb-1 block">URL</label>
+          <label className="text-sm text-muted-foreground mb-1 block">URL</label>
           <Input
             type="url"
             placeholder="https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html"
@@ -56,12 +60,12 @@ export function TaskForm({ onTaskComplete }: TaskFormProps) {
             onChange={(e) => setUrl(e.target.value)}
             required
             disabled={loading}
-            className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600"
+            className="bg-muted border-input text-foreground placeholder:text-muted-foreground/40"
           />
         </div>
 
         <div>
-          <label className="text-sm text-zinc-400 mb-1 block">
+          <label className="text-sm text-muted-foreground mb-1 block">
             What to extract
           </label>
           <Textarea
@@ -71,7 +75,7 @@ export function TaskForm({ onTaskComplete }: TaskFormProps) {
             required
             disabled={loading}
             rows={2}
-            className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600"
+            className="bg-muted border-input text-foreground placeholder:text-muted-foreground/40"
           />
         </div>
 
@@ -100,8 +104,8 @@ export function TaskForm({ onTaskComplete }: TaskFormProps) {
         </Button>
       </form>
 
-      <div className="mt-4 pt-4 border-t border-zinc-800">
-        <p className="text-xs text-zinc-600 mb-2">Quick examples:</p>
+      <div className="mt-4 pt-4 border-t border-border">
+        <p className="text-xs text-muted-foreground mb-2">Quick examples:</p>
         <div className="space-y-1">
           <button
             type="button"
