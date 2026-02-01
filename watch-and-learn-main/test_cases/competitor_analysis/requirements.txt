@@ -1,0 +1,12 @@
+# Firecrawl API client
+firecrawl-py>=1.0.0
+
+# LangChain for AI agent
+langchain>=0.1.0
+langchain-openai>=0.0.5
+
+# Environment and utilities
+python-dotenv>=1.0.0
+
+# HTTP client
+httpx>=0.25.0

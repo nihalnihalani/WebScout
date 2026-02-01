@@ -68,12 +68,12 @@ export const attemptRecovery = createTracedOp(
             }
           }
 
-          const result = await stagehand.extract(
-            task.target,
-            z.object({ data: z.any() })
-          );
+          const actSchema = z.object({
+            data: z.string().describe(`The extracted information for: ${task.target}`),
+          });
+          const result = await stagehand.extract(task.target, actSchema);
 
-          if (result && result.data) {
+          if (result && result.data && result.data.length > 0) {
             const screenshot = await captureScreenshot(page);
             return {
               success: true,
@@ -96,12 +96,12 @@ export const attemptRecovery = createTracedOp(
             `Check: main content, sidebars, tables, headers, product details, ` +
             `pricing sections, metadata, and dynamically loaded content.`;
 
-          const result = await stagehand.extract(
-            refinedInstruction,
-            z.object({ data: z.any() })
-          );
+          const refinedSchema = z.object({
+            data: z.string().describe(`The extracted information for: ${task.target}`),
+          });
+          const result = await stagehand.extract(refinedInstruction, refinedSchema);
 
-          if (result && result.data) {
+          if (result && result.data && result.data.length > 0) {
             return {
               success: true,
               result: result.data,
@@ -126,12 +126,12 @@ export const attemptRecovery = createTracedOp(
             );
 
             if (geminiStrategy.suggestedSelector) {
-              const result = await stagehand.extract(
-                geminiStrategy.suggestedSelector,
-                z.object({ data: z.any() })
-              );
+              const geminiSchema = z.object({
+                data: z.string().describe(`The extracted information for: ${task.target}`),
+              });
+              const result = await stagehand.extract(geminiStrategy.suggestedSelector, geminiSchema);
 
-              if (result && result.data) {
+              if (result && result.data && result.data.length > 0) {
                 const screenshot = await captureScreenshot(page);
                 return {
                   success: true,

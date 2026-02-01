@@ -133,12 +133,19 @@ export const learningScrape = createTracedOp(
                 timestamp: Date.now(),
               });
 
-              const result = await stagehand.extract(
-                bestMatch.working_selector,
-                z.object({ data: z.any() })
-              );
+              const cachedSchema = z.object({
+                data: z.string().describe(`The extracted information for: ${bestMatch.working_selector}`),
+              });
+              const result = await stagehand.extract(bestMatch.working_selector, cachedSchema);
 
-              if (result && result.data) {
+              if (result && result.data && result.data.length > 0) {
+                let parsedResult: unknown = result.data;
+                try {
+                  parsedResult = JSON.parse(result.data);
+                } catch {
+                  // Keep as string
+                }
+
                 await incrementPatternSuccess(bestMatch.id);
 
                 const ss = await captureScreenshot(page);
@@ -151,7 +158,7 @@ export const learningScrape = createTracedOp(
                   timestamp: Date.now(),
                 });
 
-                return buildResult(taskId, task, "success", result.data, steps, screenshots, true, false, bestMatch.id, startTime);
+                return buildResult(taskId, task, "success", parsedResult, steps, screenshots, true, false, bestMatch.id, startTime);
               }
             } catch (error) {
               steps.push({
@@ -173,12 +180,20 @@ export const learningScrape = createTracedOp(
               timestamp: Date.now(),
             });
 
-            const result = await stagehand.extract(
-              task.target,
-              z.object({ data: z.any() })
-            );
+            const freshSchema = z.object({
+              data: z.string().describe(`The extracted information for: ${task.target}`),
+            });
+            const result = await stagehand.extract(task.target, freshSchema);
 
-            if (result && result.data) {
+            if (result && result.data && result.data.length > 0) {
+              // Try to parse as JSON if possible, otherwise keep as string
+              let parsedResult: unknown = result.data;
+              try {
+                parsedResult = JSON.parse(result.data);
+              } catch {
+                // Keep as string
+              }
+
               const pattern = buildPattern(task.url, task.target, task.target, "extract");
               patternId = await storePattern(pattern);
 
@@ -206,7 +221,7 @@ export const learningScrape = createTracedOp(
                 timestamp: Date.now(),
               });
 
-              return buildResult(taskId, task, "success", result.data, steps, screenshots, false, false, patternId, startTime);
+              return buildResult(taskId, task, "success", parsedResult, steps, screenshots, false, false, patternId, startTime);
             }
           } catch (error) {
             const ss = await captureScreenshot(page);

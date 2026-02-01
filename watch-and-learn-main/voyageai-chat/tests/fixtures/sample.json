@@ -1,0 +1,54 @@
+{
+  "documents": [
+    {
+      "id": "doc_python",
+      "content": "Python is a high-level, interpreted programming language known for its clear syntax and readability. It was created by Guido van Rossum and first released in 1991. Python supports multiple programming paradigms, including procedural, object-oriented, and functional programming."
+    },
+    {
+      "id": "doc_javascript",
+      "content": "JavaScript is a dynamic programming language primarily used for web development. It was created by Brendan Eich in 1995 while working at Netscape. JavaScript enables interactive web pages and is an essential part of web applications alongside HTML and CSS."
+    },
+    {
+      "id": "doc_rust",
+      "content": "Rust is a systems programming language focused on safety, speed, and concurrency. It was developed by Mozilla Research and first appeared in 2010. Rust prevents memory errors and data races at compile time without using a garbage collector."
+    },
+    {
+      "id": "doc_embeddings",
+      "content": "Vector embeddings are numerical representations of text that capture semantic meaning. They allow computers to understand relationships between words and documents. Embeddings are essential for modern search systems, enabling similarity matching beyond exact keyword matches."
+    },
+    {
+      "id": "doc_rag",
+      "content": "Retrieval-Augmented Generation (RAG) combines information retrieval with language models. Instead of relying solely on trained knowledge, RAG systems first retrieve relevant documents, then use them as context for generating responses. This improves accuracy and allows for up-to-date information."
+    }
+  ],
+  "test_queries": [
+    {
+      "query": "Who created Python programming language?",
+      "expected_ids": ["doc_python"]
+    },
+    {
+      "query": "What language is used for web development?",
+      "expected_ids": ["doc_javascript"]
+    },
+    {
+      "query": "Which programming language focuses on memory safety?",
+      "expected_ids": ["doc_rust"]
+    },
+    {
+      "query": "How do embeddings help with search?",
+      "expected_ids": ["doc_embeddings"]
+    },
+    {
+      "query": "What is RAG and how does it work?",
+      "expected_ids": ["doc_rag"]
+    },
+    {
+      "query": "When was JavaScript created and by whom?",
+      "expected_ids": ["doc_javascript"]
+    },
+    {
+      "query": "What prevents memory errors in Rust?",
+      "expected_ids": ["doc_rust"]
+    }
+  ]
+}

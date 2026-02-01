@@ -50,17 +50,17 @@ const statCards = [
 
 export function StatsOverview({ stats, generation }: StatsProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Generation Badge */}
       {generation !== undefined && generation > 0 && (
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
+        <div className="flex items-center gap-3 animate-fade-in-up">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+            <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse-slow" />
             <span className="text-sm font-semibold text-emerald-400">
               Generation {generation}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+          <div className="flex items-center gap-1.5 text-xs text-zinc-400">
             <TrendingUp className="w-3 h-3" />
             <span>Self-improved {generation} times</span>
           </div>
@@ -69,20 +69,31 @@ export function StatsOverview({ stats, generation }: StatsProps) {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((card) => {
+        {statCards.map((card, index) => {
           const value = stats[card.key as keyof typeof stats];
           return (
             <Card
               key={card.key}
-              className="bg-zinc-900 border-zinc-800 p-6"
+              className={`relative overflow-hidden border-white/5 bg-zinc-900/40 backdrop-blur-md hover:bg-zinc-900/60 transition-all duration-300 group`}
+              style={{
+                animationDelay: `${index * 100}ms`
+              }}
             >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${card.bg}`}>
-                  <card.icon className={`w-5 h-5 ${card.color}`} />
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="p-6 relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-xl ${card.bg} group-hover:scale-110 transition-transform duration-300 ring-1 ring-inset ring-white/10`}>
+                    <card.icon className={`w-6 h-6 ${card.color}`} />
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold text-white tracking-tight">{value}</p>
+                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{card.label}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{value}</p>
-                  <p className="text-xs text-zinc-500">{card.label}</p>
+                
+                {/* Decorative sparkline/bar */}
+                <div className="mt-4 h-1 w-full bg-zinc-800/50 rounded-full overflow-hidden">
+                   <div className={`h-full ${card.color.replace('text-', 'bg-')} opacity-50 w-2/3 group-hover:w-full transition-all duration-700 ease-out`} />
                 </div>
               </div>
             </Card>

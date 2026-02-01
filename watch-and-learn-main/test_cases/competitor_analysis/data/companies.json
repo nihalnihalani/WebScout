@@ -1,0 +1,763 @@
+{
+  "red-barn-robotics": {
+    "id": "red-barn-robotics",
+    "name": "Red Barn Robotics",
+    "slug": "red-barn-robotics",
+    "location": null,
+    "description": "A Roomba for weeds on a farm.",
+    "industries": [
+      "Industrials",
+      "Agriculture"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/red-barn-robotics",
+    "batch": "Winter 2025"
+  },
+  "mentra": {
+    "id": "mentra",
+    "name": "Mentra",
+    "slug": "mentra",
+    "location": "San Francisco, CA, USA",
+    "description": "Building the open source smart glasses operating system.",
+    "industries": [
+      "Consumer",
+      "Virtual and Augmented Reality"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/mentra",
+    "batch": "Winter 2025"
+  },
+  "blindpay": {
+    "id": "blindpay",
+    "name": "BlindPay",
+    "slug": "blindpay",
+    "location": null,
+    "description": "Stablecoin API for global payments",
+    "industries": [
+      "Fintech",
+      "Payments"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/blindpay",
+    "batch": "Winter 2025"
+  },
+  "vantel": {
+    "id": "vantel",
+    "name": "Vantel",
+    "slug": "vantel",
+    "location": null,
+    "description": "AI Platform for Commercial Insurance Brokerages",
+    "industries": [
+      "Fintech",
+      "Insurance"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/vantel",
+    "batch": "Winter 2025"
+  },
+  "fira": {
+    "id": "fira",
+    "name": "Fira",
+    "slug": "fira",
+    "location": null,
+    "description": "Financial research platform for investment firms",
+    "industries": [
+      "B2B",
+      "Finance and Accounting"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/fira",
+    "batch": "Winter 2025"
+  },
+  "assistant-ui": {
+    "id": "assistant-ui",
+    "name": "assistant-ui",
+    "slug": "assistant-ui",
+    "location": "San Francisco, CA, USA",
+    "description": "Open Source React.js Library for AI Chat",
+    "industries": [
+      "B2B",
+      "Infrastructure"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/assistant-ui",
+    "batch": "Winter 2025"
+  },
+  "artifact": {
+    "id": "artifact",
+    "name": "Artifact",
+    "slug": "artifact",
+    "location": null,
+    "description": "An Collaborative, AI-native IDE for Hardware Engineers",
+    "industries": [
+      "B2B",
+      "Engineering, Product and Design"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/artifact-2",
+    "batch": "Winter 2025"
+  },
+  "axal": {
+    "id": "axal",
+    "name": "Axal",
+    "slug": "axal",
+    "location": "San Francisco, CA, USA",
+    "description": "Automate Data Entry From Inbox to ERP",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/axal",
+    "batch": "Winter 2025"
+  },
+  "thirdlayer": {
+    "id": "thirdlayer",
+    "name": "ThirdLayer",
+    "slug": "thirdlayer",
+    "location": "San Francisco, CA, USA",
+    "description": "Building Dex, the AI Browser Copilot",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/thirdlayer",
+    "batch": "Winter 2025"
+  },
+  "trainloop": {
+    "id": "trainloop",
+    "name": "TrainLoop",
+    "slug": "trainloop",
+    "location": "San Francisco, CA, USA",
+    "description": "Reasoning Fine-Tuning",
+    "industries": [
+      "B2B",
+      "Engineering, Product and Design"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/trainloop",
+    "batch": "Winter 2025"
+  },
+  "candid": {
+    "id": "candid",
+    "name": "Candid",
+    "slug": "candid",
+    "location": null,
+    "description": "Launching Jan 2026",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/trycandid",
+    "batch": "Winter 2025"
+  },
+  "sammy-labs": {
+    "id": "sammy-labs",
+    "name": "SAMMY Labs",
+    "slug": "sammy-labs",
+    "location": null,
+    "description": "SAMMY Labs, the knowledge layer for your people and AI",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/sammy-labs",
+    "batch": "Winter 2025"
+  },
+  "instinct": {
+    "id": "instinct",
+    "name": "Instinct",
+    "slug": "instinct",
+    "location": null,
+    "description": "Building the lunar future.",
+    "industries": [
+      "Industrials",
+      "Aviation and Space"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/instinct",
+    "batch": "Winter 2025"
+  },
+  "mercura": {
+    "id": "mercura",
+    "name": "Mercura",
+    "slug": "mercura",
+    "location": null,
+    "description": "AI Quote and Order Automation for Distributors & Manufacturers",
+    "industries": [
+      "B2B",
+      "Sales"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/mercura",
+    "batch": "Winter 2025"
+  },
+  "lightbox": {
+    "id": "lightbox",
+    "name": "Lightbox",
+    "slug": "lightbox",
+    "location": "San Francisco, CA, USA",
+    "description": "Cursor for Content Creation",
+    "industries": [
+      "Consumer"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/lightbox",
+    "batch": "Winter 2025"
+  },
+  "cedar": {
+    "id": "cedar",
+    "name": "Cedar",
+    "slug": "cedar",
+    "location": null,
+    "description": "The open source copilot for any app",
+    "industries": [
+      "B2B",
+      "Engineering, Product and Design"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/cedar",
+    "batch": "Winter 2025"
+  },
+  "browser-use": {
+    "id": "browser-use",
+    "name": "Browser Use",
+    "slug": "browser-use",
+    "location": "San Francisco, CA, USA",
+    "description": "Leading open-source web agent project with 50k stars in 3 months",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/browser-use",
+    "batch": "Winter 2025"
+  },
+  "tamlabs": {
+    "id": "tamlabs",
+    "name": "TamLabs",
+    "slug": "tamlabs",
+    "location": "San Francisco, CA, USA",
+    "description": "Cursor for Microsoft Word",
+    "industries": [
+      "B2B",
+      "Productivity"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/tamlabs",
+    "batch": "Winter 2025"
+  },
+  "ergo": {
+    "id": "ergo",
+    "name": "Ergo",
+    "slug": "ergo",
+    "location": "San Francisco, CA, USA",
+    "description": "AI Agents for Sales Operations",
+    "industries": [
+      "B2B",
+      "Sales"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/ergo",
+    "batch": "Winter 2025"
+  },
+  "copycat": {
+    "id": "copycat",
+    "name": "CopyCat",
+    "slug": "copycat",
+    "location": "San Francisco, CA, USA",
+    "description": "AI Biopsy Callback Platform for Dermatologists",
+    "industries": [
+      "Healthcare"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/copycat",
+    "batch": "Winter 2025"
+  },
+  "paratus-health": {
+    "id": "paratus-health",
+    "name": "Paratus Health",
+    "slug": "paratus-health",
+    "location": "Menlo Park, CA, USA",
+    "description": "Medical Voice Agents for Patient Management",
+    "industries": [
+      "Healthcare",
+      "Healthcare IT"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/paratus-health",
+    "batch": "Winter 2025"
+  },
+  "butter": {
+    "id": "butter",
+    "name": "Butter",
+    "slug": "butter",
+    "location": null,
+    "description": "Muscle Memory Cache for Agents",
+    "industries": [
+      "B2B",
+      "Infrastructure"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/butter",
+    "batch": "Winter 2025"
+  },
+  "bluebook": {
+    "id": "bluebook",
+    "name": "Bluebook",
+    "slug": "bluebook",
+    "location": "San Francisco, CA, USA",
+    "description": "AI for accounting",
+    "industries": [
+      "B2B",
+      "Finance and Accounting"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/bluebook",
+    "batch": "Winter 2025"
+  },
+  "tensorpool": {
+    "id": "tensorpool",
+    "name": "TensorPool",
+    "slug": "tensorpool",
+    "location": null,
+    "description": "Vercel For GPUs",
+    "industries": [
+      "B2B",
+      "Infrastructure"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/tensorpool",
+    "batch": "Winter 2025"
+  },
+  "dalus": {
+    "id": "dalus",
+    "name": "Dalus",
+    "slug": "dalus",
+    "location": null,
+    "description": "AI-Powered Hardware System Design Software",
+    "industries": [
+      "B2B",
+      "Engineering, Product and Design"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/dalus",
+    "batch": "Winter 2025"
+  },
+  "roark": {
+    "id": "roark",
+    "name": "Roark",
+    "slug": "roark",
+    "location": "San Francisco, CA, USA",
+    "description": "Test, monitor, and improve your voice agents",
+    "industries": [
+      "B2B",
+      "Analytics"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/roark",
+    "batch": "Winter 2025"
+  },
+  "rebolt": {
+    "id": "rebolt",
+    "name": "Rebolt",
+    "slug": "rebolt",
+    "location": null,
+    "description": "Build apps and agents by speaking with AI",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/rebolt",
+    "batch": "Winter 2025"
+  },
+  "spott": {
+    "id": "spott",
+    "name": "Spott",
+    "slug": "spott",
+    "location": null,
+    "description": "AI-native ATS/CRM for recruiting firms",
+    "industries": [
+      "B2B",
+      "Recruiting and Talent"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/spott",
+    "batch": "Winter 2025"
+  },
+  "woz": {
+    "id": "woz",
+    "name": "Woz",
+    "slug": "woz",
+    "location": "San Francisco, CA, USA",
+    "description": "AI platform enabling anyone to build and scale software businesses",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/woz",
+    "batch": "Winter 2025"
+  },
+  "proception-inc": {
+    "id": "proception-inc",
+    "name": "Proception Inc",
+    "slug": "proception-inc",
+    "location": null,
+    "description": "Making humanoids dexterous enough to thread a needle",
+    "industries": [
+      "Industrials",
+      "Manufacturing and Robotics"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/proception-inc",
+    "batch": "Winter 2025"
+  },
+  "demeter": {
+    "id": "demeter",
+    "name": "Demeter",
+    "slug": "demeter",
+    "location": "San Francisco, CA, USA",
+    "description": "AI Value Creation Team for Private Equity",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/demeter",
+    "batch": "Winter 2025"
+  },
+  "wildcard": {
+    "id": "wildcard",
+    "name": "Wildcard",
+    "slug": "wildcard",
+    "location": null,
+    "description": "Sell Products in ChatGPT Shopping",
+    "industries": [
+      "B2B",
+      "Engineering, Product and Design"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/wildcard",
+    "batch": "Winter 2025"
+  },
+  "permitify": {
+    "id": "permitify",
+    "name": "Permitify",
+    "slug": "permitify",
+    "location": null,
+    "description": "AI co-pilot for building plan review and building code compliance",
+    "industries": [
+      "Real Estate and Construction",
+      "Construction"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/permitify",
+    "batch": "Winter 2025"
+  },
+  "reditus-space": {
+    "id": "reditus-space",
+    "name": "Reditus Space",
+    "slug": "reditus-space",
+    "location": "Atlanta, GA, USA",
+    "description": "Reusable Satellites for zero-g manufacturing",
+    "industries": [
+      "Industrials",
+      "Aviation and Space"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/reditus-space",
+    "batch": "Winter 2025"
+  },
+  "optifye-ai": {
+    "id": "optifye-ai",
+    "name": "Optifye.ai",
+    "slug": "optifye-ai",
+    "location": "San Francisco, CA, USA",
+    "description": "AI performance monitoring for factory workers",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/optifye-ai",
+    "batch": "Winter 2025"
+  },
+  "pinch": {
+    "id": "pinch",
+    "name": "Pinch",
+    "slug": "pinch",
+    "location": "Remote",
+    "description": "Real-time AI Voice Translation for Developers",
+    "industries": [
+      "B2B",
+      "Productivity"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/pinch",
+    "batch": "Winter 2025"
+  },
+  "retrofit": {
+    "id": "retrofit",
+    "name": "Retrofit",
+    "slug": "retrofit",
+    "location": "New York, NY, USA",
+    "description": "A vintage marketplace curated by AI",
+    "industries": [
+      "Consumer",
+      "Apparel and Cosmetics"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/retrofit",
+    "batch": "Winter 2025"
+  },
+  "archon": {
+    "id": "archon",
+    "name": "Archon",
+    "slug": "archon",
+    "location": "San Francisco, CA, USA",
+    "description": "We help software companies sell to government.",
+    "industries": [
+      "Government"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/archon",
+    "batch": "Winter 2025"
+  },
+  "forge-automation": {
+    "id": "forge-automation",
+    "name": "Forge Automation",
+    "slug": "forge-automation",
+    "location": "Toronto, ON, Canada",
+    "description": "Software Enabled CNC Parts Supplier",
+    "industries": [
+      "Industrials",
+      "Manufacturing and Robotics"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/forge-automation",
+    "batch": "Winter 2025"
+  },
+  "mastra": {
+    "id": "mastra",
+    "name": "Mastra",
+    "slug": "mastra",
+    "location": "Remote",
+    "description": "The Javascript framework for building AI agents, from the Gatsby devs",
+    "industries": [
+      "B2B",
+      "Engineering, Product and Design"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/mastra",
+    "batch": "Winter 2025"
+  },
+  "afterquery": {
+    "id": "afterquery",
+    "name": "AfterQuery",
+    "slug": "afterquery",
+    "location": "San Francisco, CA, USA",
+    "description": "Research lab investigating the boundaries of AI capabilities.",
+    "industries": [
+      "B2B",
+      "Infrastructure"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/afterquery",
+    "batch": "Winter 2025"
+  },
+  "misprint": {
+    "id": "misprint",
+    "name": "Misprint",
+    "slug": "misprint",
+    "location": "New York, NY, USA",
+    "description": "Misprint is building Robinhood for Pokemon cards",
+    "industries": [
+      "Consumer"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/misprint",
+    "batch": "Winter 2025"
+  },
+  "fuseai": {
+    "id": "fuseai",
+    "name": "FuseAI",
+    "slug": "fuseai",
+    "location": null,
+    "description": "The only outbound sales software you will ever need.",
+    "industries": [
+      "B2B",
+      "Sales"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/fuseai",
+    "batch": "Winter 2025"
+  },
+  "miyagi-labs": {
+    "id": "miyagi-labs",
+    "name": "Miyagi Labs",
+    "slug": "miyagi-labs",
+    "location": "New York, NY, USA",
+    "description": "AI tutors for exam prep",
+    "industries": [
+      "Education"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/miyagi-labs",
+    "batch": "Winter 2025"
+  },
+  "artificial-societies": {
+    "id": "artificial-societies",
+    "name": "Artificial Societies",
+    "slug": "artificial-societies",
+    "location": "San Francisco, CA, USA",
+    "description": "We use AI to simulate entire human societies",
+    "industries": [
+      "B2B",
+      "Analytics"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/artificial-societies",
+    "batch": "Winter 2025"
+  },
+  "openintake": {
+    "id": "openintake",
+    "name": "OpenIntake",
+    "slug": "openintake",
+    "location": "New York, NY, USA",
+    "description": "The AI Front Door For Law Firms",
+    "industries": [
+      "B2B",
+      "Legal"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/openintake",
+    "batch": "Winter 2025"
+  },
+  "peppr-ai": {
+    "id": "peppr-ai",
+    "name": "Peppr AI",
+    "slug": "peppr-ai",
+    "location": null,
+    "description": "Self-improving knowledge base synthesizing scattered company data",
+    "industries": [
+      "B2B",
+      "Engineering, Product and Design"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/peppr-ai",
+    "batch": "Winter 2025"
+  },
+  "infinite": {
+    "id": "infinite",
+    "name": "Infinite",
+    "slug": "infinite",
+    "location": "San Francisco, CA, USA",
+    "description": "Global B2B Stablecoin Processor",
+    "industries": [
+      "Fintech",
+      "Payments"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/infinite",
+    "batch": "Winter 2025"
+  },
+  "sennu-ai": {
+    "id": "sennu-ai",
+    "name": "Sennu AI",
+    "slug": "sennu-ai",
+    "location": "San Francisco, CA, USA",
+    "description": "AI Code Review for Salesforce Development",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/sennu-ai",
+    "batch": "Winter 2025"
+  },
+  "orbital-operations": {
+    "id": "orbital-operations",
+    "name": "Orbital Operations",
+    "slug": "orbital-operations",
+    "location": null,
+    "description": "High Thrust Space Vehicles for Satellite Defense",
+    "industries": [
+      "Industrials",
+      "Aviation and Space"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/orbital-operations",
+    "batch": "Winter 2025"
+  },
+  "mesh": {
+    "id": "mesh",
+    "name": "Mesh",
+    "slug": "mesh",
+    "location": null,
+    "description": "Building your AI finance co-worker",
+    "industries": [
+      "B2B",
+      "Finance and Accounting"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/mesh-2",
+    "batch": "Winter 2025"
+  },
+  "outlit": {
+    "id": "outlit",
+    "name": "Outlit",
+    "slug": "outlit",
+    "location": "San Francisco, CA, USA",
+    "description": "Account-level Customer Journey for PLG SaaS",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/outlit",
+    "batch": "Winter 2025"
+  },
+  "tire-swing": {
+    "id": "tire-swing",
+    "name": "Tire Swing",
+    "slug": "tire-swing",
+    "location": "New York, NY, USA",
+    "description": "AI Powered Affordable Housing Eligibility",
+    "industries": [
+      "B2B",
+      "Legal"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/tire-swing",
+    "batch": "Winter 2025"
+  },
+  "harper": {
+    "id": "harper",
+    "name": "Harper",
+    "slug": "harper",
+    "location": "San Francisco, CA, USA",
+    "description": "AI-native commercial insurance brokerage",
+    "industries": [
+      "Fintech",
+      "Insurance"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/harper",
+    "batch": "Winter 2025"
+  },
+  "calltree": {
+    "id": "calltree",
+    "name": "Calltree",
+    "slug": "calltree",
+    "location": "San Francisco, CA, USA",
+    "description": "Enterprise-grade AI support reps for call centers",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/calltree",
+    "batch": "Winter 2025"
+  },
+  "nitrode": {
+    "id": "nitrode",
+    "name": "Nitrode",
+    "slug": "nitrode",
+    "location": null,
+    "description": "AI game development engine & platform",
+    "industries": [
+      "Consumer",
+      "Gaming"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/nitrode",
+    "batch": "Winter 2025"
+  },
+  "karsa": {
+    "id": "karsa",
+    "name": "Karsa",
+    "slug": "karsa",
+    "location": "New York, NY, USA",
+    "description": "Stablecoin neobank for emerging markets",
+    "industries": [
+      "Fintech"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/karsa",
+    "batch": "Winter 2025"
+  },
+  "exla": {
+    "id": "exla",
+    "name": "Exla",
+    "slug": "exla",
+    "location": null,
+    "description": "An SDK to run transformer models anywhere",
+    "industries": [
+      "B2B",
+      "Engineering, Product and Design"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/exla",
+    "batch": "Winter 2025"
+  },
+  "confident-ai": {
+    "id": "confident-ai",
+    "name": "Confident AI",
+    "slug": "confident-ai",
+    "location": "San Francisco, CA, USA",
+    "description": "Open-Source Unit Testing for LLM Applications",
+    "industries": [
+      "B2B",
+      "Engineering, Product and Design"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/confident-ai",
+    "batch": "Winter 2025"
+  },
+  "riviera": {
+    "id": "riviera",
+    "name": "Riviera",
+    "slug": "riviera",
+    "location": "San Francisco, CA, USA",
+    "description": "AI Employees for Hotels",
+    "industries": [
+      "B2B"
+    ],
+    "yc_url": "https://www.ycombinator.com/companies/riviera",
+    "batch": "Winter 2025"
+  }
+}

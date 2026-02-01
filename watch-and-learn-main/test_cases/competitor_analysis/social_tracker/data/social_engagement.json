@@ -1,0 +1,324 @@
+{
+  "generated_at": "2026-01-10T15:28:12.141178",
+  "total_companies": 10,
+  "companies": {
+    "red-barn-robotics": {
+      "company_id": "red-barn-robotics",
+      "company_name": "Red Barn Robotics",
+      "description": "A Roomba for weeds on a farm.",
+      "industries": [
+        "Industrials",
+        "Agriculture"
+      ],
+      "location": null,
+      "yc_url": "https://www.ycombinator.com/companies/red-barn-robotics",
+      "twitter": {
+        "handle": "@RedBarnRobotics",
+        "found": true
+      },
+      "linkedin": {
+        "url": "https://www.linkedin.com/company/red-barn-robotics",
+        "found": true
+      },
+      "valuation": {
+        "funding_stage": "Seed",
+        "estimated_valuation": "$5M-$15M",
+        "investors": [
+          "Y Combinator"
+        ]
+      },
+      "sentiment": {
+        "overall_score": 65,
+        "rating": "BUY",
+        "analysis": "Red Barn Robotics offers an innovative solution for the agricultural sector with its automated weed removal technology, which could significantly reduce labor costs and increase efficiency for farmers. The presence on social media platforms like Twitter and LinkedIn suggests active engagement with potential customers and investors. Being at the seed funding stage indicates early development, but also potential for growth and market penetration. The concept aligns with trends towards automation and sustainability in agriculture, making it an attractive investment opportunity."
+      },
+      "scraped_at": "2026-01-10T15:28:11.986379"
+    },
+    "mentra": {
+      "company_id": "mentra",
+      "company_name": "Mentra",
+      "description": "Building the open source smart glasses operating system.",
+      "industries": [
+        "Consumer",
+        "Virtual and Augmented Reality"
+      ],
+      "location": "San Francisco, CA, USA",
+      "yc_url": "https://www.ycombinator.com/companies/mentra",
+      "twitter": {
+        "handle": "@MentraOS",
+        "found": true
+      },
+      "linkedin": {
+        "url": "https://www.linkedin.com/company/mentra",
+        "found": true
+      },
+      "valuation": {
+        "funding_stage": "Seed",
+        "estimated_valuation": "$5M-$15M",
+        "investors": [
+          "Y Combinator"
+        ]
+      },
+      "sentiment": {
+        "overall_score": 65,
+        "rating": "BUY",
+        "analysis": "Mentra is working on an innovative product by developing an open source smart glasses operating system, which could position them well in the growing augmented reality market. The presence on social media platforms like Twitter and LinkedIn suggests active engagement with the tech community and potential customers. Being at the seed funding stage indicates early development, but also potential for growth if they can secure further investment and partnerships."
+      },
+      "scraped_at": "2026-01-10T15:28:11.772755"
+    },
+    "blindpay": {
+      "company_id": "blindpay",
+      "company_name": "BlindPay",
+      "description": "Stablecoin API for global payments",
+      "industries": [
+        "Fintech",
+        "Payments"
+      ],
+      "location": null,
+      "yc_url": "https://www.ycombinator.com/companies/blindpay",
+      "twitter": {
+        "handle": null,
+        "found": false
+      },
+      "linkedin": {
+        "url": null,
+        "found": false
+      },
+      "valuation": {
+        "funding_stage": "Seed",
+        "estimated_valuation": "$5M-$15M",
+        "investors": [
+          "Y Combinator"
+        ]
+      },
+      "sentiment": {
+        "overall_score": 55,
+        "rating": "NEUTRAL",
+        "analysis": "BlindPay operates in the growing fintech sector with a focus on stablecoin payments, which is promising given the increasing interest in cryptocurrency solutions. However, the lack of social media presence could hinder brand visibility and customer engagement. Being at the seed funding stage, the company may face challenges in scaling and competing with more established players. Overall, it's a neutral opportunity with potential for growth if they can effectively leverage their niche."
+      },
+      "scraped_at": "2026-01-10T15:28:12.140609"
+    },
+    "vantel": {
+      "company_id": "vantel",
+      "company_name": "Vantel",
+      "description": "AI Platform for Commercial Insurance Brokerages",
+      "industries": [
+        "Fintech",
+        "Insurance"
+      ],
+      "location": null,
+      "yc_url": "https://www.ycombinator.com/companies/vantel",
+      "twitter": {
+        "handle": null,
+        "found": false
+      },
+      "linkedin": {
+        "url": null,
+        "found": false
+      },
+      "valuation": {
+        "funding_stage": "Seed",
+        "estimated_valuation": "$1M-$5M",
+        "investors": [
+          "Y Combinator"
+        ]
+      },
+      "sentiment": {
+        "overall_score": 60,
+        "rating": "BUY",
+        "analysis": "Vantel operates in the niche market of AI for commercial insurance brokerages, which has potential for growth due to increasing demand for AI-driven solutions in the insurance sector. However, the lack of social media presence could limit brand visibility and customer engagement. Being in the seed stage, the company may face challenges in scaling and securing additional funding. Overall, the innovative focus on AI in a specialized industry presents a promising opportunity, but investors should be cautious of the early-stage risks."
+      },
+      "scraped_at": "2026-01-10T15:28:12.079382"
+    },
+    "fira": {
+      "company_id": "fira",
+      "company_name": "Fira",
+      "description": "Financial research platform for investment firms",
+      "industries": [
+        "B2B",
+        "Finance and Accounting"
+      ],
+      "location": null,
+      "yc_url": "https://www.ycombinator.com/companies/fira",
+      "twitter": {
+        "handle": null,
+        "found": false
+      },
+      "linkedin": {
+        "url": null,
+        "found": false
+      },
+      "valuation": {
+        "funding_stage": "Seed",
+        "estimated_valuation": "$1M-$5M",
+        "investors": [
+          "Y Combinator"
+        ]
+      },
+      "sentiment": {
+        "overall_score": 55,
+        "rating": "NEUTRAL",
+        "analysis": "Fira is a financial research platform targeting investment firms, which is a niche but potentially lucrative market. The company is at the seed funding stage, indicating early development and potential for growth. However, the lack of social media presence on platforms like Twitter and LinkedIn could limit its visibility and networking opportunities. Overall, the sentiment is neutral with a slight positive tilt due to the market potential."
+      },
+      "scraped_at": "2026-01-10T15:28:11.623353"
+    },
+    "assistant-ui": {
+      "company_id": "assistant-ui",
+      "company_name": "assistant-ui",
+      "description": "Open Source React.js Library for AI Chat",
+      "industries": [
+        "B2B",
+        "Infrastructure"
+      ],
+      "location": "San Francisco, CA, USA",
+      "yc_url": "https://www.ycombinator.com/companies/assistant-ui",
+      "twitter": {
+        "handle": null,
+        "found": false
+      },
+      "linkedin": {
+        "url": null,
+        "found": false
+      },
+      "valuation": {
+        "funding_stage": "Seed",
+        "estimated_valuation": "$5M-$15M",
+        "investors": [
+          "Y Combinator"
+        ]
+      },
+      "sentiment": {
+        "overall_score": 65,
+        "rating": "BUY",
+        "analysis": "Assistant-ui is an open-source React.js library focused on AI chat, which is a growing field with significant interest. The open-source nature could attract a community of developers and contributors, enhancing its development and adoption. However, the lack of social media presence might limit its visibility and community engagement. Being at the seed funding stage, it has potential for growth but also carries typical early-stage risks."
+      },
+      "scraped_at": "2026-01-10T15:28:11.987637"
+    },
+    "artifact": {
+      "company_id": "artifact",
+      "company_name": "Artifact",
+      "description": "An Collaborative, AI-native IDE for Hardware Engineers",
+      "industries": [
+        "B2B",
+        "Engineering, Product and Design"
+      ],
+      "location": null,
+      "yc_url": "https://www.ycombinator.com/companies/artifact-2",
+      "twitter": {
+        "handle": null,
+        "found": false
+      },
+      "linkedin": {
+        "url": null,
+        "found": false
+      },
+      "valuation": {
+        "funding_stage": "Seed",
+        "estimated_valuation": "$1M-$5M",
+        "investors": [
+          "Y Combinator"
+        ]
+      },
+      "sentiment": {
+        "overall_score": 60,
+        "rating": "NEUTRAL",
+        "analysis": "Artifact is an AI-native IDE targeting hardware engineers, which is a niche but potentially growing market. The lack of social media presence on platforms like Twitter and LinkedIn could limit its visibility and networking opportunities. Being at the seed funding stage indicates early development, which carries inherent risks but also potential for growth if the product gains traction. Overall, the company shows promise but needs to establish a stronger market presence."
+      },
+      "scraped_at": "2026-01-10T15:28:11.656649"
+    },
+    "axal": {
+      "company_id": "axal",
+      "company_name": "Axal",
+      "description": "Automate Data Entry From Inbox to ERP",
+      "industries": [
+        "B2B"
+      ],
+      "location": "San Francisco, CA, USA",
+      "yc_url": "https://www.ycombinator.com/companies/axal",
+      "twitter": {
+        "handle": null,
+        "found": false
+      },
+      "linkedin": {
+        "url": null,
+        "found": false
+      },
+      "valuation": {
+        "funding_stage": "Seed",
+        "estimated_valuation": "$1M-$5M",
+        "investors": [
+          "Y Combinator"
+        ]
+      },
+      "sentiment": {
+        "overall_score": 60,
+        "rating": "NEUTRAL",
+        "analysis": "Axal operates in a niche market by automating data entry from inboxes to ERP systems, which can be valuable for businesses looking to streamline operations. However, the lack of social media presence on platforms like Twitter and LinkedIn may limit their visibility and customer engagement. Being at the seed funding stage indicates early development, which carries inherent risks but also potential for growth if they can effectively capture market interest."
+      },
+      "scraped_at": "2026-01-10T15:28:11.771492"
+    },
+    "thirdlayer": {
+      "company_id": "thirdlayer",
+      "company_name": "ThirdLayer",
+      "description": "Building Dex, the AI Browser Copilot",
+      "industries": [
+        "B2B"
+      ],
+      "location": "San Francisco, CA, USA",
+      "yc_url": "https://www.ycombinator.com/companies/thirdlayer",
+      "twitter": {
+        "handle": null,
+        "found": false
+      },
+      "linkedin": {
+        "url": null,
+        "found": false
+      },
+      "valuation": {
+        "funding_stage": "Seed",
+        "estimated_valuation": "$1M-$5M",
+        "investors": [
+          "Y Combinator"
+        ]
+      },
+      "sentiment": {
+        "overall_score": 60,
+        "rating": "NEUTRAL",
+        "analysis": "ThirdLayer is developing an AI Browser Copilot called Dex, which could be a promising tool in enhancing web browsing experiences. However, the lack of social media presence on platforms like Twitter and LinkedIn may limit their visibility and engagement with potential users and investors. Being in the seed funding stage suggests early development, which carries inherent risks but also potential for growth if they can effectively execute their vision and expand their market presence."
+      },
+      "scraped_at": "2026-01-10T15:28:11.655595"
+    },
+    "trainloop": {
+      "company_id": "trainloop",
+      "company_name": "TrainLoop",
+      "description": "Reasoning Fine-Tuning",
+      "industries": [
+        "B2B",
+        "Engineering, Product and Design"
+      ],
+      "location": "San Francisco, CA, USA",
+      "yc_url": "https://www.ycombinator.com/companies/trainloop",
+      "twitter": {
+        "handle": null,
+        "found": false
+      },
+      "linkedin": {
+        "url": null,
+        "found": false
+      },
+      "valuation": {
+        "funding_stage": "Seed",
+        "estimated_valuation": "$1M-$5M",
+        "investors": [
+          "Y Combinator"
+        ]
+      },
+      "sentiment": {
+        "overall_score": 60,
+        "rating": "NEUTRAL",
+        "analysis": "TrainLoop is in the early stages of development with seed funding, indicating initial investor interest. However, the lack of social media presence on major platforms like Twitter and LinkedIn could limit its visibility and networking opportunities. The focus on reasoning fine-tuning is a niche area with potential, but the company's success will depend on its ability to demonstrate unique value and scalability."
+      },
+      "scraped_at": "2026-01-10T15:28:11.555537"
+    }
+  }
+}

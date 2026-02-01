@@ -78,6 +78,8 @@ function generateDemoTask(
     recoveryAttempted = false;
     success = true;
     durationMs = usedCache ? 1500 + Math.random() * 2000 : 4000 + Math.random() * 3000;
+    // Late tasks reuse existing patterns (cache hits) or create new ones
+    patternId = `pattern:${crypto.randomUUID()}`;
   }
 
   const completedAt = createdAt + Math.round(durationMs);

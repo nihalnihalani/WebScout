@@ -1,0 +1,50 @@
+# Environment
+.env
+.env.local
+.env.*.local
+.envrc
+
+# Python
+venv/
+.venv/
+myenv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+
+# Build outputs
+build/
+dist/
+out/
+.next/
+
+# Dependencies
+node_modules/
+
+# Data
+data/*.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker
+.docker/
+.playwright-mcp/
+
+*/.env
+# Screenshots
+screenshots/

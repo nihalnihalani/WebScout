@@ -178,20 +178,27 @@ export async function GET() {
         direction: lastMetrics.cacheHitRate > firstMetrics.cacheHitRate ? "better" : lastMetrics.cacheHitRate === firstMetrics.cacheHitRate ? "same" : "worse",
         unit: "%",
       },
-      {
-        // Recovery Rate: less recovery needed = better (cache is handling it)
-        // If last cohort has fewer recovery attempts AND high cache hits, that's improvement
-        metric: "Recovery Needed",
-        firstCohort: Math.round((100 - firstMetrics.cacheHitRate) * 10) / 10,
-        lastCohort: Math.round((100 - lastMetrics.cacheHitRate) * 10) / 10,
-        improvement: Math.round((firstMetrics.cacheHitRate - (100 - lastMetrics.cacheHitRate)) * 10) / 10,
-        improvementPct: (100 - firstMetrics.cacheHitRate) > 0
-          ? `-${(((100 - firstMetrics.cacheHitRate) - (100 - lastMetrics.cacheHitRate)) / (100 - firstMetrics.cacheHitRate) * 100).toFixed(0)}%`
-          : "0%",
-        direction: lastMetrics.cacheHitRate > firstMetrics.cacheHitRate ? "better" : "same",
-        unit: "%",
-      },
     ];
+
+    // Compute Recovery Needed metric using actual recovery_attempted data
+    const firstRecoveryRate = firstMetrics.taskCount > 0
+      ? Math.round((firstCohort.filter(t => t.recovery_attempted).length / firstMetrics.taskCount) * 1000) / 10
+      : 0;
+    const lastRecoveryRate = lastMetrics.taskCount > 0
+      ? Math.round((lastCohort.filter(t => t.recovery_attempted).length / lastMetrics.taskCount) * 1000) / 10
+      : 0;
+
+    improvements.push({
+      metric: "Recovery Needed",
+      firstCohort: firstRecoveryRate,
+      lastCohort: lastRecoveryRate,
+      improvement: Math.round((firstRecoveryRate - lastRecoveryRate) * 10) / 10,
+      improvementPct: firstRecoveryRate > 0
+        ? `-${(((firstRecoveryRate - lastRecoveryRate) / firstRecoveryRate) * 100).toFixed(0)}%`
+        : "0%",
+      direction: lastRecoveryRate < firstRecoveryRate ? "better" : lastRecoveryRate === firstRecoveryRate ? "same" : "worse",
+      unit: "%",
+    });
 
     const improvementScore = computeImprovementScore(improvements);
     // Count patterns from tasks (works even without vector index)

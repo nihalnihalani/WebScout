@@ -1,0 +1,69 @@
+services:
+  playwright-browser:
+    build: ./services/playwright-browser
+    ports:
+      - "6080:6080" # websockify (noVNC WebSocket)
+      - "8765:8765" # MJPEG video stream
+      - "3001:3001" # MCP server (SSE)
+    environment:
+      - DISPLAY=:99
+      - SCREEN_WIDTH=1920
+      - SCREEN_HEIGHT=1080
+    shm_size: '2gb'
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "6080" ]
+      interval: 10s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+
+  nextjs-webapp:
+    build: ./services/nextjs-webapp
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_VNC_URL=ws://localhost:6080
+      - NEXT_PUBLIC_VIDEO_WS_URL=ws://localhost:8765
+      - AGENT_WS_URL=ws://python-agent:8000/ws
+    depends_on:
+      playwright-browser:
+        condition: service_healthy
+      python-agent:
+        condition: service_started
+    networks:
+      - app-network
+
+  python-agent:
+    build: ./services/python-agent
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./screenshots:/tmp/screenshots
+      - ./logs:/app/logs
+      - ./demo:/app/demo:ro
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - VOYAGE_API_KEY=${VOYAGE_API_KEY}
+      - MCP_SERVER_URL=http://playwright-browser:3001
+      - DEMO_ENABLED=${DEMO_ENABLED:-false}
+      - MONGODB_URI=${MONGODB_URI}
+    depends_on:
+      playwright-browser:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
