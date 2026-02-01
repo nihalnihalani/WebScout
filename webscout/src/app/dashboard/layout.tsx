@@ -9,13 +9,17 @@ import {
   Activity,
   ExternalLink,
   Award,
+  MonitorPlay,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tasks", label: "Tasks", icon: ListTodo },
+  { href: "/live", label: "Live View", icon: MonitorPlay },
   { href: "/patterns", label: "Recovery Library", icon: Brain },
+  { href: "/teach", label: "Teach", icon: GraduationCap },
   { href: "/evaluation", label: "Evaluation", icon: Award },
 ];
 
@@ -79,6 +83,7 @@ export default function DashboardLayout({
             <p className="text-zinc-500">Weave (W&B)</p>
             <p className="text-zinc-500">Redis + RediSearch</p>
             <p className="text-zinc-500">OpenAI</p>
+            <p className="text-zinc-500">Google Cloud (Gemini)</p>
             <p className="text-zinc-500">Vercel</p>
           </div>
         </div>

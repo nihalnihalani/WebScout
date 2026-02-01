@@ -1,7 +1,8 @@
 import type { Stagehand, Page } from "@browserbasehq/stagehand";
 import type { RecoveryResult, TaskRequest } from "../utils/types";
-import { captureScreenshot } from "../tracing/trace-context";
+import { captureScreenshot, captureDOMSnapshot } from "../tracing/trace-context";
 import { createTracedOp, withWeaveAttributes } from "../tracing/weave";
+import { isGeminiAvailable, getGeminiRecoveryStrategy } from "../ai/gemini";
 import { z } from "zod";
 
 export const attemptRecovery = createTracedOp(
@@ -18,7 +19,7 @@ export const attemptRecovery = createTracedOp(
       {
         recoveryFor: task.target,
         failureContext,
-        strategies: ["agent", "act", "extract_refined"],
+        strategies: ["agent", "act", "extract_refined", "gemini"],
       },
       async () => {
         // Strategy A: Agent
@@ -110,6 +111,43 @@ export const attemptRecovery = createTracedOp(
           }
         } catch (error) {
           console.warn("[Recovery] Strategy C failed:", (error as Error).message);
+        }
+
+        // Strategy D: Gemini Analysis (Google Cloud sponsor integration)
+        if (isGeminiAvailable()) {
+          try {
+            console.log("[Recovery] Strategy D: Gemini-powered analysis");
+            const domSnippet = await captureDOMSnapshot(page);
+            const geminiStrategy = await getGeminiRecoveryStrategy(
+              task.url,
+              task.target,
+              failureContext,
+              domSnippet
+            );
+
+            if (geminiStrategy.suggestedSelector) {
+              const result = await stagehand.extract(
+                geminiStrategy.suggestedSelector,
+                z.object({ data: z.any() })
+              );
+
+              if (result && result.data) {
+                const screenshot = await captureScreenshot(page);
+                return {
+                  success: true,
+                  result: result.data,
+                  strategy_used: "gemini" as const,
+                  working_selector: geminiStrategy.suggestedSelector,
+                  screenshot,
+                };
+              }
+            }
+          } catch (error) {
+            console.warn(
+              "[Recovery] Strategy D failed:",
+              (error as Error).message
+            );
+          }
         }
 
         console.log("[Recovery] All strategies exhausted");

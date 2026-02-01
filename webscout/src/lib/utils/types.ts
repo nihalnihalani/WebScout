@@ -44,7 +44,7 @@ export interface RecoveryResult {
   success: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result: any;
-  strategy_used: "agent" | "act" | "extract_refined";
+  strategy_used: "agent" | "act" | "extract_refined" | "gemini";
   working_selector: string;
   screenshot?: string;
 }

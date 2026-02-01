@@ -7,6 +7,7 @@ import { TaskForm } from "@/components/task-form";
 import { TaskList } from "@/components/task-list";
 import { LearningCurve } from "@/components/learning-curve";
 import { ImprovementReport } from "@/components/improvement-report";
+import { LearningTimeline } from "@/components/learning-timeline";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const defaultStats = {
@@ -70,6 +71,9 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Learning Timeline - full width */}
+      <LearningTimeline />
     </div>
   );
 }
