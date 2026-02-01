@@ -72,40 +72,6 @@ function GradeRing({ score, grade }: { score: number; grade: string }) {
   );
 }
 
-function ImprovementRow({ metric }: { metric: ImprovementMetric }) {
-  return (
-    <div className="flex items-center gap-4 py-3 border-b border-zinc-800 last:border-0">
-      <div className="flex items-center gap-2 w-36 shrink-0">
-        <MetricIcon metric={metric.metric} />
-        <span className="text-sm text-zinc-300">{metric.metric}</span>
-      </div>
-
-      <div className="flex items-center gap-2 flex-1">
-        <span className="text-sm font-mono text-zinc-500 w-20 text-right">
-          {formatValue(metric.firstCohort, metric.unit, metric.metric)}
-        </span>
-        <ArrowRight className="w-3 h-3 text-zinc-600 shrink-0" />
-        <span className={`text-sm font-mono font-semibold w-20 ${
-          metric.direction === "better" ? "text-emerald-400" :
-          metric.direction === "worse" ? "text-red-400" : "text-zinc-400"
-        }`}>
-          {formatValue(metric.lastCohort, metric.unit, metric.metric)}
-        </span>
-      </div>
-
-      <div className="flex items-center gap-2 w-28 justify-end">
-        <DirectionIcon direction={metric.direction} />
-        <span className={`text-sm font-semibold ${
-          metric.direction === "better" ? "text-emerald-400" :
-          metric.direction === "worse" ? "text-red-400" : "text-zinc-500"
-        }`}>
-          {metric.improvementPct}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 export function ImprovementReport() {
   const { data, isLoading, error } = useEvaluation();
 
@@ -156,35 +122,39 @@ export function ImprovementReport() {
       </div>
 
       {/* Top section: Score ring + headline + speed factor */}
-      <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
-        <GradeRing score={evaluation.improvement_score} grade={evaluation.improvement_grade} />
+      <div className="flex flex-col sm:flex-row items-center gap-6 mb-8">
+        <div className="shrink-0">
+          <GradeRing score={evaluation.improvement_score} grade={evaluation.improvement_grade} />
+        </div>
 
-        <div className="flex-1 text-center md:text-left">
-          <p className="text-base text-zinc-300 mb-6 leading-relaxed font-light">
+        <div className="flex-1 text-center sm:text-left min-w-0 w-full">
+          <p className="text-sm text-zinc-300 mb-6 leading-relaxed font-light text-balance">
             {evaluation.summary.headline}
           </p>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-3 rounded-lg bg-zinc-900 border border-zinc-800">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
               <div className="flex items-center justify-center gap-1.5 text-emerald-400 mb-1">
-                <Zap className="w-4 h-4" />
-                <span className="text-xl font-bold">{evaluation.speed_factor}x</span>
+                <Zap className="w-3.5 h-3.5" />
+                <span className="text-lg font-bold">
+                  {evaluation.speed_factor === "N/A" ? "N/A" : `${evaluation.speed_factor}x`}
+                </span>
               </div>
-              <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Faster</span>
+              <span className="text-[9px] font-medium uppercase tracking-wider text-zinc-500">Faster</span>
             </div>
-            <div className="text-center p-3 rounded-lg bg-zinc-900 border border-zinc-800">
+            <div className="text-center p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
               <div className="flex items-center justify-center gap-1.5 text-blue-400 mb-1">
-                <Target className="w-4 h-4" />
-                <span className="text-xl font-bold">{evaluation.summary.success_rate_change}</span>
+                <Target className="w-3.5 h-3.5" />
+                <span className="text-lg font-bold">{evaluation.summary.success_rate_change}</span>
               </div>
-              <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Success Rate</span>
+              <span className="text-[9px] font-medium uppercase tracking-wider text-zinc-500">Success</span>
             </div>
-            <div className="text-center p-3 rounded-lg bg-zinc-900 border border-zinc-800">
+            <div className="text-center p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
               <div className="flex items-center justify-center gap-1.5 text-purple-400 mb-1">
-                <Brain className="w-4 h-4" />
-                <span className="text-xl font-bold">{evaluation.patterns_learned}</span>
+                <Brain className="w-3.5 h-3.5" />
+                <span className="text-lg font-bold">{evaluation.patterns_learned}</span>
               </div>
-              <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Patterns</span>
+              <span className="text-[9px] font-medium uppercase tracking-wider text-zinc-500">Patterns</span>
             </div>
           </div>
         </div>
@@ -199,9 +169,40 @@ export function ImprovementReport() {
           </span>
         </div>
 
-        <div>
+        <div className="space-y-1">
           {evaluation.improvements.map((metric) => (
-            <ImprovementRow key={metric.metric} metric={metric} />
+            <div key={metric.metric} className="grid grid-cols-12 gap-2 py-3 border-b border-zinc-800/50 last:border-0 items-center">
+              {/* Metric Name */}
+              <div className="col-span-12 sm:col-span-4 flex items-center gap-2">
+                <MetricIcon metric={metric.metric} />
+                <span className="text-sm text-zinc-300 truncate">{metric.metric}</span>
+              </div>
+
+              {/* Values */}
+              <div className="col-span-8 sm:col-span-5 flex items-center justify-center sm:justify-start gap-2">
+                <span className="text-xs font-mono text-zinc-500">
+                  {formatValue(metric.firstCohort, metric.unit, metric.metric)}
+                </span>
+                <ArrowRight className="w-3 h-3 text-zinc-700 shrink-0" />
+                <span className={`text-xs font-mono font-semibold ${
+                  metric.direction === "better" ? "text-emerald-400" :
+                  metric.direction === "worse" ? "text-red-400" : "text-zinc-400"
+                }`}>
+                  {formatValue(metric.lastCohort, metric.unit, metric.metric)}
+                </span>
+              </div>
+
+              {/* Percentage */}
+              <div className="col-span-4 sm:col-span-3 flex items-center justify-end gap-1.5">
+                <DirectionIcon direction={metric.direction} />
+                <span className={`text-xs font-semibold ${
+                  metric.direction === "better" ? "text-emerald-400" :
+                  metric.direction === "worse" ? "text-red-400" : "text-zinc-500"
+                }`}>
+                  {metric.improvementPct}
+                </span>
+              </div>
+            </div>
           ))}
         </div>
       </div>

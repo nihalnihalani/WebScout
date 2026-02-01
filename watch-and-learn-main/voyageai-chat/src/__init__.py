@@ -1,1 +1,0 @@
-"""VoyageAI Chat Application."""

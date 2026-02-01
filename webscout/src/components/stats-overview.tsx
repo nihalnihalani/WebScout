@@ -79,7 +79,7 @@ export function StatsOverview({ stats, generation }: StatsProps) {
                 animationDelay: `${index * 100}ms`
               }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="p-6 relative z-10">
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-xl ${card.bg} group-hover:scale-110 transition-transform duration-300 ring-1 ring-inset ring-white/10`}>

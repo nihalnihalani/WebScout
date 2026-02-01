@@ -259,7 +259,7 @@ function StepRow({
           <Icon className={`w-3 h-3 ${thought.color}`} />
         </div>
         {!isLast && (
-          <div className="w-px flex-1 bg-gradient-to-b from-zinc-700 to-zinc-800/50 my-0.5" />
+          <div className="w-px flex-1 bg-linear-to-b from-zinc-700 to-zinc-800/50 my-0.5" />
         )}
       </div>
 
@@ -283,7 +283,7 @@ function StepRow({
             </span>
           )}
         </div>
-        <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed break-words">
+        <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed wrap-break-word">
           {step.detail}
         </p>
 
@@ -346,7 +346,7 @@ function TimelineEntry({
           className={`w-3.5 h-3.5 rounded-full ${dotColor} mt-5 ring-[3px] ring-zinc-950 shrink-0 z-10`}
         />
         {!isLast && (
-          <div className="w-px flex-1 bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 my-1 timeline-line" />
+          <div className="w-px flex-1 bg-linear-to-b from-zinc-700 via-zinc-800 to-zinc-900 my-1 timeline-line" />
         )}
       </div>
 
@@ -544,8 +544,8 @@ export function LearningTimeline() {
   return (
     <Card className="bg-zinc-900 border-zinc-800 p-6 relative overflow-hidden shadow-xl">
       {/* Decorative gradient orbs */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-violet-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-emerald-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-linear-to-bl from-violet-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-linear-to-tr from-emerald-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
       <div className="relative mb-8">

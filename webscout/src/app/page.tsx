@@ -190,7 +190,7 @@ export default function Home() {
             {/* Headline */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
               Every Failed Click{" "}
-              <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                 Makes It Smarter
               </span>
             </h1>
@@ -262,7 +262,7 @@ export default function Home() {
               <div key={step.number} className="relative group">
                 {/* Connector line on larger screens */}
                 {i < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-12 left-full w-full h-px bg-gradient-to-r from-zinc-700 to-transparent z-0" />
+                  <div className="hidden lg:block absolute top-12 left-full w-full h-px bg-linear-to-r from-zinc-700 to-transparent z-0" />
                 )}
                 <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-zinc-700 transition-colors h-full">
                   <div className="flex items-center gap-3 mb-4">
@@ -290,7 +290,7 @@ export default function Home() {
 
       {/* ========== THE SELF-IMPROVING LOOP ========== */}
       <section className="relative border-t border-zinc-800/50">
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/[0.02] to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-b from-emerald-500/[0.02] to-transparent pointer-events-none" />
         <div className="relative max-w-6xl mx-auto px-6 py-24">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 mb-6">
@@ -400,7 +400,7 @@ export default function Home() {
             ))}
 
             {/* Architecture highlight card */}
-            <div className="bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-2xl p-6 flex flex-col justify-center">
+            <div className="bg-linear-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-2xl p-6 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-3">
                 <BarChart3 className="w-5 h-5 text-emerald-400" />
                 <h3 className="text-sm font-semibold text-white">
@@ -430,7 +430,7 @@ export default function Home() {
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-6">
                 Why WebScout{" "}
-                <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                   Wins
                 </span>
               </h2>
@@ -516,7 +516,7 @@ export default function Home() {
 
       {/* ========== CTA SECTION ========== */}
       <section className="relative border-t border-zinc-800/50">
-        <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/[0.03] to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-t from-emerald-500/[0.03] to-transparent pointer-events-none" />
         <div className="relative max-w-6xl mx-auto px-6 py-24 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             See the Loop in Action

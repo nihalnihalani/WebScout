@@ -44,8 +44,8 @@ export default function DashboardPage() {
     <div className="space-y-12 pb-12">
       {/* Hero Section */}
       <div className="relative isolate overflow-hidden rounded-3xl bg-zinc-900 border border-white/5 px-6 py-12 sm:px-12 xl:py-16">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,theme(colors.zinc.800),theme(colors.zinc.950))] opacity-20" />
-        <div className="absolute inset-y-0 right-0 -z-10 w-[200%] origin-bottom-left skew-x-[-30deg] bg-white/5 shadow-xl shadow-emerald-600/10 ring-1 ring-white/10 sm:w-[100%]" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,var(--color-zinc-800),var(--color-zinc-950))] opacity-20" />
+        <div className="absolute inset-y-0 right-0 -z-10 w-[200%] origin-bottom-left skew-x-[-30deg] bg-white/5 shadow-xl shadow-emerald-600/10 ring-1 ring-white/10 sm:w-full" />
         
         <div className="mx-auto max-w-2xl lg:mx-0">
           <div className="flex items-center gap-x-3 mb-6">

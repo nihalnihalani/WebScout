@@ -1,0 +1,25 @@
+{
+  "name": "demo-video",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts WebScoutDemo out/webscout-demo.mp4",
+    "build": "remotion render src/index.ts WebScoutDemo out/webscout-demo.mp4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@remotion/cli": "^4.0.415",
+    "@remotion/player": "^4.0.415",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "^4.0.415",
+    "typescript": "^5.9.3"
+  }
+}
