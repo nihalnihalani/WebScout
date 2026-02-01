@@ -3,6 +3,9 @@
 import { useTasks } from "@/hooks/use-tasks";
 import { TaskList } from "@/components/task-list";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Inbox } from "lucide-react";
+import Link from "next/link";
+import { EmptyState } from "@/components/empty-state";
 
 export default function TasksPage() {
   const { data, isLoading } = useTasks();
@@ -22,8 +25,23 @@ export default function TasksPage() {
             <Skeleton key={i} className="h-16 bg-zinc-900 rounded-lg" />
           ))}
         </div>
+      ) : data?.tasks && data.tasks.length > 0 ? (
+        <TaskList tasks={data.tasks} />
       ) : (
-        <TaskList tasks={data?.tasks || []} />
+        <EmptyState
+          icon={Inbox}
+          title="No tasks yet"
+          description="Run your first extraction task to see results here."
+          action={
+            <Link
+              href="/"
+              className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+            >
+              Go to Dashboard
+            </Link>
+          }
+          className="bg-zinc-900 border-zinc-800"
+        />
       )}
     </div>
   );

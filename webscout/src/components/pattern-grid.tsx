@@ -2,7 +2,8 @@
 
 import { PatternCard } from "./pattern-card";
 import type { PagePattern } from "@/lib/utils/types";
-import { Brain } from "lucide-react";
+import { Brain, Sparkles } from "lucide-react";
+import { EmptyState } from "./empty-state";
 
 interface PatternGridProps {
   patterns: PagePattern[];
@@ -11,14 +12,12 @@ interface PatternGridProps {
 export function PatternGrid({ patterns }: PatternGridProps) {
   if (patterns.length === 0) {
     return (
-      <div className="text-center py-16">
-        <Brain className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-        <p className="text-zinc-500 text-lg">No patterns learned yet.</p>
-        <p className="text-zinc-600 text-sm mt-1">
-          Run some tasks and WebScout will start learning from successes and
-          failures!
-        </p>
-      </div>
+      <EmptyState
+        icon={Brain}
+        secondaryIcon={Sparkles}
+        title="No patterns learned yet"
+        description="The neural engine hasn't processed any successful extractions yet. Run tasks to begin building the knowledge base."
+      />
     );
   }
 

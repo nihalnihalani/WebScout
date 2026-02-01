@@ -3,7 +3,8 @@
 import { usePatterns } from "@/hooks/use-patterns";
 import { PatternGrid } from "@/components/pattern-grid";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain } from "lucide-react";
+import { Brain, Database } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 
 export default function PatternsPage() {
   const { data, isLoading } = usePatterns();
@@ -31,8 +32,15 @@ export default function PatternsPage() {
             <Skeleton key={i} className="h-48 bg-zinc-900 rounded-lg" />
           ))}
         </div>
+      ) : data?.patterns && data.patterns.length > 0 ? (
+        <PatternGrid patterns={data.patterns} />
       ) : (
-        <PatternGrid patterns={data?.patterns || []} />
+        <EmptyState
+          icon={Database}
+          title="No patterns learned yet"
+          description="Patterns are automatically learned when WebScout successfully extracts data. Run some tasks to build up the pattern library."
+          className="bg-zinc-900 border-zinc-800"
+        />
       )}
     </div>
   );

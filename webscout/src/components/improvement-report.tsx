@@ -16,7 +16,10 @@ import {
   Brain,
   ArrowRight,
   BarChart3,
+  Star,
+  Activity,
 } from "lucide-react";
+import { EmptyState } from "./empty-state";
 
 function MetricIcon({ metric }: { metric: string }) {
   switch (metric) {
@@ -25,6 +28,7 @@ function MetricIcon({ metric }: { metric: string }) {
     case "Cache Hit Rate": return <Zap className="w-4 h-4" />;
     case "Recovery Rate": return <RefreshCw className="w-4 h-4" />;
     case "Recovery Needed": return <RefreshCw className="w-4 h-4" />;
+    case "Avg Quality": return <Star className="w-4 h-4" />;
     default: return <BarChart3 className="w-4 h-4" />;
   }
 }
@@ -124,18 +128,14 @@ export function ImprovementReport() {
 
   if (!data?.evaluation) {
     return (
-      <Card className="bg-zinc-900 border-zinc-800 p-6">
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="mb-4 rounded-full bg-zinc-800 p-4">
-            <Award className="h-8 w-8 text-zinc-500" />
-          </div>
-          <h3 className="mb-2 text-lg font-semibold text-white">
-            Not Enough Data Yet
-          </h3>
-          <p className="max-w-sm text-sm text-zinc-500">
-            {data?.message || "Run at least 3 tasks to generate an improvement evaluation"}
-          </p>
-        </div>
+      <Card className="bg-zinc-900/50 border-zinc-800 p-6 backdrop-blur-sm">
+        <EmptyState
+          icon={Activity}
+          secondaryIcon={BarChart3}
+          title="Not enough data for analysis"
+          description={data?.message || "Run at least 3 tasks to generate an automated improvement evaluation report."}
+          className="border-zinc-800/50 py-16"
+        />
       </Card>
     );
   }
@@ -143,56 +143,58 @@ export function ImprovementReport() {
   const { evaluation } = data;
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800 p-6">
+    <Card className="bg-zinc-900 border-zinc-800 p-6 shadow-xl">
       {/* Header */}
       <div className="flex items-center gap-2 mb-6">
-        <Award className="h-5 w-5 text-amber-400" />
-        <h2 className="text-lg font-semibold text-white">Self-Improvement Evaluation</h2>
-        <span className="ml-2 text-xs text-zinc-500">
-          Based on {data.tasks_analyzed} tasks
+        <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+          <Award className="h-4 w-4 text-amber-400" />
+        </div>
+        <h2 className="text-lg font-bold text-white tracking-tight">Self-Improvement Evaluation</h2>
+        <span className="ml-auto text-xs font-mono text-zinc-500 bg-zinc-800/50 px-2 py-1 rounded">
+          {data.tasks_analyzed} TASKS ANALYZED
         </span>
       </div>
 
       {/* Top section: Score ring + headline + speed factor */}
-      <div className="flex flex-col md:flex-row items-center gap-6 mb-8">
+      <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
         <GradeRing score={evaluation.improvement_score} grade={evaluation.improvement_grade} />
 
         <div className="flex-1 text-center md:text-left">
-          <p className="text-base text-zinc-300 mb-4 leading-relaxed">
+          <p className="text-base text-zinc-300 mb-6 leading-relaxed font-light">
             {evaluation.summary.headline}
           </p>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 text-emerald-400 mb-1">
-                <Zap className="w-3.5 h-3.5" />
-                <span className="text-lg font-bold">{evaluation.speed_factor}x</span>
+            <div className="text-center p-3 rounded-lg bg-zinc-900 border border-zinc-800">
+              <div className="flex items-center justify-center gap-1.5 text-emerald-400 mb-1">
+                <Zap className="w-4 h-4" />
+                <span className="text-xl font-bold">{evaluation.speed_factor}x</span>
               </div>
-              <span className="text-xs text-zinc-500">Faster</span>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Faster</span>
             </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 text-blue-400 mb-1">
-                <Target className="w-3.5 h-3.5" />
-                <span className="text-lg font-bold">{evaluation.summary.success_rate_change}</span>
+            <div className="text-center p-3 rounded-lg bg-zinc-900 border border-zinc-800">
+              <div className="flex items-center justify-center gap-1.5 text-blue-400 mb-1">
+                <Target className="w-4 h-4" />
+                <span className="text-xl font-bold">{evaluation.summary.success_rate_change}</span>
               </div>
-              <span className="text-xs text-zinc-500">Success Rate</span>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Success Rate</span>
             </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 text-purple-400 mb-1">
-                <Brain className="w-3.5 h-3.5" />
-                <span className="text-lg font-bold">{evaluation.patterns_learned}</span>
+            <div className="text-center p-3 rounded-lg bg-zinc-900 border border-zinc-800">
+              <div className="flex items-center justify-center gap-1.5 text-purple-400 mb-1">
+                <Brain className="w-4 h-4" />
+                <span className="text-xl font-bold">{evaluation.patterns_learned}</span>
               </div>
-              <span className="text-xs text-zinc-500">Patterns</span>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Patterns</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Detailed metrics comparison: First cohort → Last cohort */}
-      <div className="border-t border-zinc-800 pt-4">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="border-t border-zinc-800 pt-6">
+        <div className="flex items-center gap-2 mb-4">
           <BarChart3 className="w-4 h-4 text-zinc-500" />
-          <span className="text-sm font-medium text-zinc-400">
+          <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
             Early Tasks vs Recent Tasks
           </span>
         </div>
@@ -205,27 +207,46 @@ export function ImprovementReport() {
       </div>
 
       {/* Cohort breakdown */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-        {[evaluation.cohorts.first, evaluation.cohorts.middle, evaluation.cohorts.last].map((cohort) => (
-          <div key={cohort.label} className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-3">
-            <p className="text-xs font-medium text-zinc-400 mb-2">{cohort.label}</p>
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between">
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[evaluation.cohorts.first, evaluation.cohorts.middle, evaluation.cohorts.last].map((cohort, idx) => (
+          <div key={cohort.label} className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4 hover:bg-zinc-900/50 transition-colors">
+            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+              {cohort.label}
+            </p>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between items-center border-b border-zinc-800/50 pb-1.5">
                 <span className="text-zinc-500">Tasks</span>
-                <span className="text-zinc-300">{cohort.taskCount}</span>
+                <span className="text-zinc-300 font-mono">{cohort.taskCount}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center border-b border-zinc-800/50 pb-1.5">
                 <span className="text-zinc-500">Success</span>
-                <span className="text-zinc-300">{cohort.successRate.toFixed(0)}%</span>
+                <span className="text-zinc-300 font-mono">{cohort.successRate.toFixed(0)}%</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center border-b border-zinc-800/50 pb-1.5">
                 <span className="text-zinc-500">Avg Time</span>
-                <span className="text-zinc-300">{(cohort.avgDurationMs / 1000).toFixed(1)}s</span>
+                <span className="text-zinc-300 font-mono">{(cohort.avgDurationMs / 1000).toFixed(1)}s</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center border-b border-zinc-800/50 pb-1.5">
                 <span className="text-zinc-500">Cache Hits</span>
-                <span className="text-zinc-300">{cohort.cacheHitRate.toFixed(0)}%</span>
+                <span className="text-zinc-300 font-mono">{cohort.cacheHitRate.toFixed(0)}%</span>
               </div>
+              {cohort.avgQualityScore > 0 && (
+                <div className="flex justify-between items-center pt-0.5">
+                  <span className="text-zinc-500">Avg Quality</span>
+                  <span
+                    className={`font-mono font-bold ${
+                      cohort.avgQualityScore >= 70
+                        ? "text-emerald-400"
+                        : cohort.avgQualityScore >= 40
+                          ? "text-amber-400"
+                          : "text-red-400"
+                    }`}
+                  >
+                    {cohort.avgQualityScore}/100
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         ))}

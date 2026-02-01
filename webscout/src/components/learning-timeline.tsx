@@ -23,7 +23,9 @@ import {
   Database,
   Eye,
   Rocket,
+  History,
 } from "lucide-react";
+import { EmptyState } from "./empty-state";
 
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                    */
@@ -484,28 +486,13 @@ function TimelineEntry({
 
 function EmptyTimeline() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="relative mb-6">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex items-center justify-center">
-          <Brain className="w-10 h-10 text-zinc-500" />
-        </div>
-        <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-zinc-800 border-2 border-zinc-950 flex items-center justify-center">
-          <Sparkles className="w-3.5 h-3.5 text-zinc-500" />
-        </div>
-      </div>
-      <h3 className="text-lg font-semibold text-white mb-2">
-        No Learning History Yet
-      </h3>
-      <p className="text-sm text-zinc-500 max-w-md leading-relaxed">
-        Run your first scraping task to see the agent&apos;s thought process
-        unfold here. Watch it search its memory, learn new patterns, and get
-        smarter with every attempt.
-      </p>
-      <div className="mt-6 flex items-center gap-2 text-xs text-zinc-600">
-        <Rocket className="w-4 h-4" />
-        <span>Submit a task above to begin</span>
-      </div>
-    </div>
+    <EmptyState
+      icon={History}
+      secondaryIcon={Rocket}
+      title="No History Recorded"
+      description="The system is waiting for its first assignment. Dispatch a task to initialize the learning timeline."
+      className="bg-zinc-900/50 border-zinc-800/50"
+    />
   );
 }
 
@@ -555,30 +542,30 @@ export function LearningTimeline() {
   };
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800 p-6 relative overflow-hidden">
+    <Card className="bg-zinc-900 border-zinc-800 p-6 relative overflow-hidden shadow-xl">
       {/* Decorative gradient orbs */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-violet-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-emerald-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
-      <div className="relative mb-6">
+      <div className="relative mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex items-center justify-center">
+            <div className="p-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
               <Brain className="w-5 h-5 text-violet-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">
-                Learning Timeline
+              <h2 className="text-lg font-bold text-white tracking-tight">
+                Neural Timeline
               </h2>
-              <p className="text-xs text-zinc-500">
-                Agent thought process &amp; learning history
+              <p className="text-xs text-zinc-500 font-mono mt-0.5">
+                System thought process &amp; evolution
               </p>
             </div>
           </div>
           {data?.tasks && data.tasks.length > 0 && (
-            <span className="text-xs text-zinc-600 bg-zinc-800 px-2.5 py-1 rounded-full">
-              {data.tasks.length} task{data.tasks.length !== 1 ? "s" : ""}
+            <span className="text-[10px] font-mono font-medium text-zinc-500 bg-zinc-800/50 px-2.5 py-1 rounded border border-zinc-700/50">
+              {data.tasks.length} EVENTS LOGGED
             </span>
           )}
         </div>
@@ -629,8 +616,8 @@ export function LearningTimeline() {
             alt="Full screenshot"
             className="max-w-full max-h-full rounded-lg border border-zinc-700 shadow-2xl animate-in zoom-in-95 duration-200"
           />
-          <p className="absolute bottom-6 text-zinc-400 text-sm">
-            Click anywhere to close
+          <p className="absolute bottom-6 text-zinc-400 text-sm font-mono">
+            [CLICK ANYWHERE TO CLOSE]
           </p>
         </div>
       )}
