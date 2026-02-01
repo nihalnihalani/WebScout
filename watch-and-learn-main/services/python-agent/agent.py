@@ -8,6 +8,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import uuid4
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv(".env")
+load_dotenv("../../.env")
 
 import aiohttp
 import google.generativeai as genai
@@ -43,10 +48,10 @@ API_MAX_DELAY = 60.0  # Maximum delay in seconds
 API_EXPONENTIAL_BASE = 2  # Exponential backoff multiplier
 
 # Logs directory for dumping context
-LOGS_DIR = Path("/app/logs")
+LOGS_DIR = Path("logs")
 
 # Demo directory for image demonstrations
-DEMO_DIR = Path(os.getenv("DEMO_DIR", "/app/demo"))
+DEMO_DIR = Path(os.getenv("DEMO_DIR", "../../demo"))
 
 # Whether to load demo content (disabled by default)
 DEMO_ENABLED = os.getenv("DEMO_ENABLED", "false").lower() in ("true", "1", "yes")

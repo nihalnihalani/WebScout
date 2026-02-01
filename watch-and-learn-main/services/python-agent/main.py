@@ -3,6 +3,12 @@ import glob
 import json
 import logging
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from specific paths
+load_dotenv(".env") # Try local .env
+load_dotenv("../../.env") # Try project root .env
 
 from fastapi import FastAPI, Form, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -95,7 +101,10 @@ async def startup_event():
                 await asyncio.sleep(retry_delay)
             else:
                 logger.error(f"Failed to connect to MCP server after {max_retries} attempts")
-                raise
+                # Non-blocking fallback for local dev without Docker
+                logger.warning("Continuing without MCP client (dev mode patch)")
+                shared_mcp_client = None
+
 
 
 async def get_shared_mcp_client() -> MCPClient:
@@ -103,7 +112,13 @@ async def get_shared_mcp_client() -> MCPClient:
     global shared_mcp_client
 
     if shared_mcp_client is None:
-        raise RuntimeError("Shared MCP client not initialized. This should not happen.")
+        logger.warning("Shared MCP client is None, returning mock/dummy")
+        class MockMCP:
+            def get_tools_for_llm(self): return []
+            async def call_tool(self, name, args): return None
+            async def connect(self): pass
+            async def disconnect(self): pass
+        return MockMCP()
 
     return shared_mcp_client
 
@@ -151,6 +166,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 # Check if we should inject demo content (first message only)
                 demo_metadata = None
                 if not agent.demo_injected:
+                    agent.demo_dir = DEMO_DIR # Set demo directory for the agent
                     demo_metadata = await agent.inject_demo_content()
                     if demo_metadata:
                         # Send memory message immediately
@@ -270,8 +286,8 @@ async def save_recording_metadata(session_id: str = Form(...), description: str 
         description_clean = description.strip()
 
         # Find all screenshots for this session (both .jpg from video buffer and .png from legacy)
-        screenshot_pattern_jpg = f"/tmp/screenshots/{session_id}_*.jpg"
-        screenshot_pattern_png = f"/tmp/screenshots/{session_id}_*.png"
+        screenshot_pattern_jpg = (LOGS_DIR / "screenshots" / f"{session_id}_*.jpg").as_posix()
+        screenshot_pattern_png = (LOGS_DIR / "screenshots" / f"{session_id}_*.png").as_posix()
         screenshot_paths = sorted(glob.glob(screenshot_pattern_jpg) + glob.glob(screenshot_pattern_png))
         logger.info(f"Found {len(screenshot_paths)} screenshots for session {session_id}")
 
