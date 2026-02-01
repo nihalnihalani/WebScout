@@ -1,9 +1,11 @@
 "use client";
 
 import { useTasks } from "@/hooks/use-tasks";
+import { useMetrics } from "@/hooks/use-metrics";
 import { StatsOverview } from "@/components/stats-overview";
 import { TaskForm } from "@/components/task-form";
 import { TaskList } from "@/components/task-list";
+import { LearningCurve } from "@/components/learning-curve";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const defaultStats = {
@@ -19,6 +21,7 @@ const defaultStats = {
 
 export default function DashboardPage() {
   const { data, isLoading, mutate } = useTasks();
+  const { data: metricsData } = useMetrics();
 
   return (
     <div className="space-y-8">
@@ -36,8 +39,14 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : (
-        <StatsOverview stats={data?.stats || defaultStats} />
+        <StatsOverview
+          stats={data?.stats || defaultStats}
+          generation={metricsData?.summary?.generation}
+        />
       )}
+
+      {/* Learning Curve Chart — THE key visual for judges */}
+      <LearningCurve />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TaskForm onTaskComplete={() => mutate()} />

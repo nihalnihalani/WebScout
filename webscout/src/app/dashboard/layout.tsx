@@ -7,6 +7,7 @@ import {
   ListTodo,
   Brain,
   Activity,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,12 +61,22 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-zinc-800">
+        <div className="mt-auto space-y-4 pt-6 border-t border-zinc-800">
+          <a
+            href="https://wandb.ai/webscout/webscout/weave"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-yellow-400 hover:bg-yellow-500/10 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View in Weave
+          </a>
           <div className="space-y-1 text-xs text-zinc-600">
             <p>Powered by</p>
             <p className="text-zinc-500">Browserbase + Stagehand</p>
             <p className="text-zinc-500">Weave (W&B)</p>
             <p className="text-zinc-500">Redis + RediSearch</p>
+            <p className="text-zinc-500">OpenAI</p>
             <p className="text-zinc-500">Vercel</p>
           </div>
         </div>
