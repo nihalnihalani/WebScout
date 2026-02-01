@@ -146,10 +146,12 @@ export async function GET() {
     }
 
     // Split into cohorts: first third, middle third, last third
-    const third = Math.ceil(tasks.length / 3);
-    const firstCohort = tasks.slice(0, third);
-    const middleCohort = tasks.slice(third, third * 2);
-    const lastCohort = tasks.slice(third * 2);
+    // Use floor so the last (most recent) cohort gets any remainder —
+    // this ensures the "recent" cohort always has at least 1 task.
+    const third = Math.floor(tasks.length / 3);
+    const firstCohort = tasks.slice(0, Math.max(third, 1));
+    const lastCohort = tasks.slice(tasks.length - Math.max(third, 1));
+    const middleCohort = tasks.slice(Math.max(third, 1), tasks.length - Math.max(third, 1));
 
     const firstMetrics = computeCohortMetrics(firstCohort, "Early (First Third)");
     const middleMetrics = computeCohortMetrics(middleCohort, "Middle (Second Third)");

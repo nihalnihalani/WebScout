@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { learningScrape } from "@/lib/engine/scraper";
-import { storeTask, listTasks, getTaskStats } from "@/lib/redis/tasks";
+import { storeTask, getTask, listTasks, getTaskStats } from "@/lib/redis/tasks";
 import { getPatternCount } from "@/lib/redis/patterns";
 import { addScoreToCall } from "@/lib/tracing/weave";
 import type { TaskRequest } from "@/lib/utils/types";
@@ -72,7 +72,34 @@ export async function POST(request: NextRequest) {
     };
 
     executeTask().then(async (result) => {
-      await storeTask(result);
+      // The scraper's buildResult() strips large base64 data to prevent Weave
+      // serialization overflow. Merge the final status/metadata into the complete
+      // task data already flushed to Redis by flushProgress().
+      const existing = await getTask(taskId);
+      const finalTask = {
+        ...(existing || result),
+        status: result.status,
+        result: result.result,
+        used_cached_pattern: result.used_cached_pattern,
+        recovery_attempted: result.recovery_attempted,
+        pattern_id: result.pattern_id,
+        session_url: result.session_url || existing?.session_url,
+        trace_id: result.trace_id,
+        weave_call_id: result.weave_call_id,
+        quality_score: result.quality_score,
+        quality_summary: result.quality_summary,
+        completed_at: result.completed_at,
+        // Always prefer the full steps/screenshots from Redis (written by flushProgress)
+        // since buildResult() strips base64 data from the return value
+        steps: (existing?.steps && existing.steps.length >= result.steps.length)
+          ? existing.steps
+          : result.steps,
+        screenshots: (existing?.screenshots && existing.screenshots.length > 0)
+          ? existing.screenshots
+          : result.screenshots,
+      } as import("@/lib/utils/types").TaskResult;
+
+      await storeTask(finalTask);
       console.log(
         `[API] Task ${result.id} completed: ${result.status}` +
         (result.used_cached_pattern ? " (cached)" : "") +
@@ -102,12 +129,15 @@ export async function POST(request: NextRequest) {
           ),
         ]).catch(console.warn);
       }
-    }).catch((error) => {
+    }).catch(async (error) => {
       console.error(`[API] Task ${taskId} failed:`, error);
-      storeTask({
-        ...pendingTask,
+      // Merge error into existing Redis data (which has full steps from flushProgress)
+      const existing = await getTask(taskId).catch(() => null);
+      const errorStep = { action: "error", status: "failure" as const, detail: (error as Error).message, timestamp: Date.now() };
+      await storeTask({
+        ...(existing || pendingTask),
         status: "failed",
-        steps: [...pendingTask.steps, { action: "error", status: "failure" as const, detail: (error as Error).message, timestamp: Date.now() }],
+        steps: [...(existing?.steps || pendingTask.steps), errorStep],
         completed_at: Date.now(),
       } as import("@/lib/utils/types").TaskResult).catch(console.error);
     });

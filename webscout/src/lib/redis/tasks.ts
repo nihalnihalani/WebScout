@@ -83,3 +83,30 @@ export async function updateTaskStatus(
     await client.hSet(key, { data: JSON.stringify(task) });
   }
 }
+
+/**
+ * Update a running task's progress in Redis so the SSE stream can pick it up.
+ * Only updates the JSON data field — does not touch timeline or status.
+ */
+export async function updateTaskProgress(
+  taskId: string,
+  updates: {
+    steps?: TaskResult["steps"];
+    screenshots?: string[];
+    session_url?: string;
+  }
+): Promise<void> {
+  const client = await getRedisClient();
+  const key = `${TASK_PREFIX}${taskId}`;
+  const raw = await client.hGet(key, "data");
+  if (!raw) return;
+  try {
+    const task = JSON.parse(raw) as TaskResult;
+    if (updates.steps) task.steps = updates.steps;
+    if (updates.screenshots) task.screenshots = updates.screenshots;
+    if (updates.session_url) task.session_url = updates.session_url;
+    await client.hSet(key, { data: JSON.stringify(task) });
+  } catch {
+    // Non-critical — don't break the scraper if progress update fails
+  }
+}

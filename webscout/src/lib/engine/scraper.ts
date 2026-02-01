@@ -15,6 +15,7 @@ import { initWeave, createTracedOp, createInvocableOp, withWeaveAttributes, save
 import { captureScreenshot, captureDOMSnapshot } from "../tracing/trace-context";
 import { initOpenAITracing } from "../embeddings/openai";
 import { listPatterns } from "../redis/patterns";
+import { updateTaskProgress } from "../redis/tasks";
 import { geminiAnalyzePage, isGeminiAvailable } from "../ai/gemini";
 import { assessExtractionQuality } from "../ai/openai-quality";
 import { logTaskAsEvalPrediction } from "../evaluation/weave-eval-logger";
@@ -45,6 +46,12 @@ export const learningScrape = createInvocableOp(
     const startTime = Date.now();
 
     let patternId: string | undefined;
+    let sessionUrl: string | undefined;
+
+    // Flush progress to Redis so the SSE live view can pick up intermediate steps
+    const flushProgress = () => {
+      updateTaskProgress(taskId, { steps, screenshots, session_url: sessionUrl }).catch(() => {});
+    };
 
     // Fetch dynamic confidence threshold
     let confidenceThreshold: number;
@@ -75,7 +82,7 @@ export const learningScrape = createInvocableOp(
         let cachedPatterns: Awaited<ReturnType<typeof searchSimilarPatterns>> = [];
         try {
           const queryText = `${urlPattern} ${task.target}`;
-          cachedPatterns = await searchSimilarPatterns(queryText, 3);
+          cachedPatterns = await searchSimilarPatterns(queryText, 10);
         } catch (error) {
           console.warn("[Scraper] Redis search failed, proceeding without cache:", error);
           steps.push({
@@ -85,6 +92,7 @@ export const learningScrape = createInvocableOp(
             timestamp: Date.now(),
           });
         }
+        flushProgress();
 
         // Re-rank by composite score: vector similarity * 0.6 + pattern fitness * 0.4
         let bestMatch = null;
@@ -113,6 +121,7 @@ export const learningScrape = createInvocableOp(
             detail: `Found cached pattern (${(bestMatch.score! * 100).toFixed(1)}% match, composite=${((bestMatch.compositeScore ?? bestMatch.score!) * 100).toFixed(1)}%, threshold=${(confidenceThreshold * 100).toFixed(1)}%): "${bestMatch.working_selector.substring(0, 80)}..."`,
             timestamp: Date.now(),
           });
+          flushProgress();
         } else {
           steps.push({
             action: "cache_miss",
@@ -124,6 +133,7 @@ export const learningScrape = createInvocableOp(
               : "No patterns found in Redis",
             timestamp: Date.now(),
           });
+          flushProgress();
         }
 
         // STEP 2: Launch browser and navigate
@@ -136,7 +146,7 @@ export const learningScrape = createInvocableOp(
         });
 
         const stagehand = await createStagehand();
-        const sessionUrl = getSessionDebugUrl(stagehand);
+        sessionUrl = getSessionDebugUrl(stagehand);
         const page = stagehand.context.pages()[0];
 
         if (sessionUrl) {
@@ -146,6 +156,7 @@ export const learningScrape = createInvocableOp(
             detail: `Browserbase live session: ${sessionUrl}`,
             timestamp: Date.now(),
           });
+          flushProgress();
         }
 
         try {
@@ -161,6 +172,7 @@ export const learningScrape = createInvocableOp(
             screenshot: initialScreenshot,
             timestamp: Date.now(),
           });
+          flushProgress();
 
           // STEP 3: Try cached pattern (if confident match)
 
@@ -198,6 +210,7 @@ export const learningScrape = createInvocableOp(
                   screenshot: ss,
                   timestamp: Date.now(),
                 });
+                flushProgress();
 
                 // Quality check (non-critical)
                 let qualityScore: number | undefined;
@@ -248,6 +261,7 @@ export const learningScrape = createInvocableOp(
                 detail: `Cached pattern failed: ${(error as Error).message}`,
                 timestamp: Date.now(),
               });
+              flushProgress();
             }
           }
 
@@ -279,6 +293,7 @@ export const learningScrape = createInvocableOp(
                 detail: `Gemini recommends strategy "${analysis.extractionStrategy}" with ${analysis.suggestedSelectors.length} selector(s). Reasoning: ${analysis.reasoning}`,
                 timestamp: Date.now(),
               });
+              flushProgress();
             } catch (error) {
               steps.push({
                 action: "gemini_preanalysis",
@@ -286,6 +301,7 @@ export const learningScrape = createInvocableOp(
                 detail: `Gemini pre-analysis failed (non-fatal): ${(error as Error).message}`,
                 timestamp: Date.now(),
               });
+              flushProgress();
             }
           }
 
@@ -345,6 +361,7 @@ export const learningScrape = createInvocableOp(
                 detail: `New pattern stored: ${patternId}`,
                 timestamp: Date.now(),
               });
+              flushProgress();
 
               // Quality check (non-critical)
               let qualityScore: number | undefined;
@@ -359,6 +376,7 @@ export const learningScrape = createInvocableOp(
                   detail: `Quality: ${qa.quality_score}/100 (${qa.confidence}) — ${qa.summary}`,
                   timestamp: Date.now(),
                 });
+                flushProgress();
               } catch (qErr) {
                 steps.push({
                   action: "quality_check",
@@ -396,6 +414,7 @@ export const learningScrape = createInvocableOp(
               screenshot: ss,
               timestamp: Date.now(),
             });
+            flushProgress();
           }
 
           // STEP 5: RECOVERY — THE LEARNING STEP
@@ -406,6 +425,7 @@ export const learningScrape = createInvocableOp(
             detail: "Starting multi-strategy recovery...",
             timestamp: Date.now(),
           });
+          flushProgress();
 
           const recoveryResult = await attemptRecovery(
             stagehand,
@@ -446,6 +466,7 @@ export const learningScrape = createInvocableOp(
               detail: `Learned new pattern: ${patternId}`,
               timestamp: Date.now(),
             });
+            flushProgress();
 
             // Quality check (non-critical)
             let qualityScore: number | undefined;
@@ -460,6 +481,7 @@ export const learningScrape = createInvocableOp(
                 detail: `Quality: ${qa.quality_score}/100 (${qa.confidence}) — ${qa.summary}`,
                 timestamp: Date.now(),
               });
+              flushProgress();
             } catch (qErr) {
               steps.push({
                 action: "quality_check",
@@ -498,6 +520,7 @@ export const learningScrape = createInvocableOp(
             dom_snapshot: domSnapshot,
             timestamp: Date.now(),
           });
+          flushProgress();
 
           // Log evaluation prediction (non-critical)
           logTaskAsEvalPrediction({
@@ -543,6 +566,8 @@ export const learningScrape = createInvocableOp(
 );
 
 // Helper: Build TaskResult
+// NOTE: Steps are stripped of large base64 data to prevent Weave serialization
+// stack overflow. The full step data is already flushed to Redis via flushProgress().
 
 function buildResult(
   id: string,
@@ -558,6 +583,20 @@ function buildResult(
   startTime: number,
   sessionUrl?: string
 ): TaskResult {
+  // Strip large base64 data from steps to prevent Weave serialization overflow.
+  // The complete step data is already in Redis from flushProgress() calls.
+  const safeSteps = steps.map(step => {
+    const s = { ...step };
+    if (s.screenshot) s.screenshot = "[captured]";
+    if (s.dom_snapshot) s.dom_snapshot = s.dom_snapshot.substring(0, 500) + "...";
+    return s;
+  });
+
+  // Keep only the last 3 screenshots in the top-level array (for Weave trace display)
+  const safeScreenshots = screenshots.slice(-3).map(s =>
+    s.length > 50000 ? s.substring(0, 50000) : s
+  );
+
   return {
     id,
     url: task.url,
@@ -568,8 +607,8 @@ function buildResult(
     recovery_attempted: recoveryAttempted,
     pattern_id: patternId,
     session_url: sessionUrl,
-    screenshots,
-    steps,
+    screenshots: safeScreenshots,
+    steps: safeSteps,
     created_at: startTime,
     completed_at: Date.now(),
   };
