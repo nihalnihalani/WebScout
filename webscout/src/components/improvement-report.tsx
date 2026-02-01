@@ -85,20 +85,18 @@ function ImprovementRow({ metric }: { metric: ImprovementMetric }) {
           {formatValue(metric.firstCohort, metric.unit, metric.metric)}
         </span>
         <ArrowRight className="w-3 h-3 text-zinc-600 shrink-0" />
-        <span className={`text-sm font-mono font-semibold w-20 ${
-          metric.direction === "better" ? "text-emerald-400" :
-          metric.direction === "worse" ? "text-red-400" : "text-zinc-400"
-        }`}>
+        <span className={`text-sm font-mono font-semibold w-20 ${metric.direction === "better" ? "text-emerald-400" :
+            metric.direction === "worse" ? "text-red-400" : "text-zinc-400"
+          }`}>
           {formatValue(metric.lastCohort, metric.unit, metric.metric)}
         </span>
       </div>
 
       <div className="flex items-center gap-2 w-28 justify-end">
         <DirectionIcon direction={metric.direction} />
-        <span className={`text-sm font-semibold ${
-          metric.direction === "better" ? "text-emerald-400" :
-          metric.direction === "worse" ? "text-red-400" : "text-zinc-500"
-        }`}>
+        <span className={`text-sm font-semibold ${metric.direction === "better" ? "text-emerald-400" :
+            metric.direction === "worse" ? "text-red-400" : "text-zinc-500"
+          }`}>
           {metric.improvementPct}
         </span>
       </div>
@@ -231,17 +229,16 @@ export function ImprovementReport() {
                 <span className="text-zinc-500">Cache Hits</span>
                 <span className="text-zinc-300 font-mono">{cohort.cacheHitRate.toFixed(0)}%</span>
               </div>
-              {cohort.avgQualityScore > 0 && (
+              {(cohort.avgQualityScore ?? 0) > 0 && (
                 <div className="flex justify-between items-center pt-0.5">
                   <span className="text-zinc-500">Avg Quality</span>
                   <span
-                    className={`font-mono font-bold ${
-                      cohort.avgQualityScore >= 70
+                    className={`font-mono font-bold ${(cohort.avgQualityScore ?? 0) >= 70
                         ? "text-emerald-400"
-                        : cohort.avgQualityScore >= 40
+                        : (cohort.avgQualityScore ?? 0) >= 40
                           ? "text-amber-400"
                           : "text-red-400"
-                    }`}
+                      }`}
                   >
                     {cohort.avgQualityScore}/100
                   </span>

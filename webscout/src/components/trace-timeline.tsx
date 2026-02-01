@@ -61,7 +61,13 @@ const statusDotColors: Record<string, string> = {
   info: "bg-zinc-500",
 };
 
-// ... existing code ...
+// Map statuses to badge text colors
+const statusBadgeColors: Record<string, string> = {
+  success: "text-emerald-400 border-emerald-500/30",
+  failure: "text-red-400 border-red-500/30",
+  recovery: "text-amber-400 border-amber-500/30",
+  info: "text-zinc-400 border-zinc-600",
+};
 
 export function TraceTimeline({ steps }: TraceTimelineProps) {
   const [expandedScreenshot, setExpandedScreenshot] = useState<string | null>(
@@ -73,7 +79,7 @@ export function TraceTimeline({ steps }: TraceTimelineProps) {
       <div className="space-y-0 relative">
         {/* Continuous timeline line background */}
         <div className="absolute left-[5px] top-2 bottom-4 w-px bg-zinc-800/50" />
-        
+
         {steps.map((step, index) => {
           const Icon = actionIcons[step.action] || Info;
           // const isLast = index === steps.length - 1; // Removed as we use absolute line
@@ -83,17 +89,15 @@ export function TraceTimeline({ steps }: TraceTimelineProps) {
               {/* Timeline dot */}
               <div className="flex flex-col items-center z-10">
                 <div
-                  className={`w-3 h-3 rounded-full ${
-                    statusDotColors[step.status]
-                  } mt-6 ring-4 ring-black/50 transition-transform duration-300 group-hover:scale-125 shrink-0`}
+                  className={`w-3 h-3 rounded-full ${statusDotColors[step.status]
+                    } mt-6 ring-4 ring-black/50 transition-transform duration-300 group-hover:scale-125 shrink-0`}
                 />
               </div>
 
               {/* Step content card */}
               <Card
-                className={`flex-1 mb-4 p-5 border backdrop-blur-sm transition-all duration-300 ${
-                  statusColors[step.status]
-                }`}
+                className={`flex-1 mb-4 p-5 border backdrop-blur-sm transition-all duration-300 ${statusColors[step.status]
+                  }`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4 flex-1 min-w-0">
@@ -108,9 +112,8 @@ export function TraceTimeline({ steps }: TraceTimelineProps) {
                         </span>
                         <Badge
                           variant="outline"
-                          className={`text-[10px] px-2 py-0 h-5 uppercase tracking-wider ${
-                            statusBadgeColors[step.status]
-                          }`}
+                          className={`text-[10px] px-2 py-0 h-5 uppercase tracking-wider ${statusBadgeColors[step.status]
+                            }`}
                         >
                           {step.status}
                         </Badge>
@@ -160,7 +163,7 @@ export function TraceTimeline({ steps }: TraceTimelineProps) {
             <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-emerald-500 translate-x-2 -translate-y-2" />
             <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-emerald-500 -translate-x-2 translate-y-2" />
             <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-emerald-500 translate-x-2 translate-y-2" />
-            
+
             <img
               src={`data:image/png;base64,${expandedScreenshot}`}
               alt="Full screenshot"
