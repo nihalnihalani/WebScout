@@ -152,8 +152,12 @@ export default function TaskDetailPage({
             <p className="text-xs text-zinc-500 mb-2 font-medium uppercase tracking-wide">
               Extracted Data
             </p>
-            <pre className="text-sm text-emerald-400 whitespace-pre-wrap overflow-auto max-h-48 font-mono">
-              {JSON.stringify(task.result, null, 2)}
+            <pre className="text-sm text-emerald-400 whitespace-pre-wrap overflow-auto max-h-96 font-mono leading-relaxed">
+              {typeof task.result === "string"
+                ? task.result
+                : typeof task.result === "object" && task.result !== null && "result" in task.result && typeof (task.result as any).result === "string"
+                  ? (task.result as any).result
+                  : JSON.stringify(task.result, null, 2)}
             </pre>
           </div>
         )}

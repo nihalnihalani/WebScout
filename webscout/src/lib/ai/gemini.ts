@@ -9,16 +9,60 @@ let genAI: GoogleGenerativeAI | null = null;
 
 function getGenAI(): GoogleGenerativeAI {
   if (!genAI) {
-    const apiKey = process.env.GOOGLE_AI_API_KEY;
+    // Prefer GOOGLE_AI_API_KEY as explicitly requested by user configuration
+    const apiKey = process.env.GOOGLE_AI_API_KEY || process.env.GOOGLE_API_KEY;
     if (!apiKey) {
       throw new Error(
-        "GOOGLE_AI_API_KEY is not set. " +
-          "Get one at https://aistudio.google.com/apikey"
+        "GOOGLE_AI_API_KEY (or GOOGLE_API_KEY) is not set. " +
+        "Get one at https://aistudio.google.com/apikey"
       );
     }
     genAI = new GoogleGenerativeAI(apiKey);
   }
   return genAI;
+}
+
+/**
+ * Helper to generate content with retry logic and fallback to stable model on overload.
+ */
+async function generateWithFallback(
+  primaryModelName: string,
+  prompt: any, // Typed broadly to accept string | Part[] | etc.
+  retries = 2
+) {
+  const fallbackModelName = "gemini-2.0-flash";
+  let currentModelName = primaryModelName;
+  let attempts = 0;
+
+  while (true) {
+    try {
+      const model = getGenAI().getGenerativeModel({ model: currentModelName });
+      return await model.generateContent(prompt);
+    } catch (error: any) {
+      attempts++;
+      const msg = error.message || "";
+      const isTransient = msg.includes("503") || msg.includes("overloaded") || msg.includes("429");
+
+      if (isTransient) {
+        console.warn(`[Gemini] Error with ${currentModelName} (Attempt ${attempts}): ${msg}`);
+
+        // If overloaded, try falling back to stable model immediately if we haven't already
+        if ((msg.includes("503") || msg.includes("overloaded")) && currentModelName !== fallbackModelName) {
+          console.warn(`[Gemini] Switching fallback from ${currentModelName} to ${fallbackModelName}`);
+          currentModelName = fallbackModelName;
+          continue;
+        }
+
+        // Otherwise retry with backoff if we have retries left
+        if (attempts <= retries) {
+          const delay = 1000 * attempts;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+      }
+      throw error;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -69,7 +113,7 @@ export const getGeminiRecoveryStrategy = createTracedOp(
     failureContext: string,
     domSnippet?: string
   ): Promise<GeminiRecoveryStrategy> {
-    const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Model selection handled by helper
 
     const prompt = [
       "You are a web-scraping recovery specialist.",
@@ -89,7 +133,7 @@ export const getGeminiRecoveryStrategy = createTracedOp(
       '  "reasoning": a one-sentence explanation of why this selector should work.',
     ].join("\n");
 
-    const result = await model.generateContent(prompt);
+    const result = await generateWithFallback("gemini-3-flash-preview", prompt);
     const text = result.response.text().trim();
 
     try {
@@ -139,7 +183,7 @@ export const geminiAnalyzePage = createTracedOp(
     targetDescription: string,
     domSnippet: string
   ): Promise<GeminiPageAnalysis> {
-    const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Model selection handled by helper
 
     const prompt = [
       "You are a web-scraping expert.",
@@ -157,7 +201,7 @@ export const geminiAnalyzePage = createTracedOp(
       '  "reasoning": why this strategy is recommended.',
     ].join("\n");
 
-    const result = await model.generateContent(prompt);
+    const result = await generateWithFallback("gemini-3-flash-preview", prompt);
     const text = result.response.text().trim();
 
     try {
@@ -209,7 +253,7 @@ export const geminiAnalyzeScreenshot = createTracedOp(
     screenshotBase64: string,
     targetDescription: string
   ): Promise<GeminiScreenshotAnalysis> {
-    const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Model selection handled by helper
 
     const prompt = [
       "You are a visual web-page analysis expert.",
@@ -224,7 +268,7 @@ export const geminiAnalyzeScreenshot = createTracedOp(
       '  "confidence": a number between 0 and 1 indicating how confident you are that the target data is visible on the page.',
     ].join("\n");
 
-    const result = await model.generateContent([
+    const result = await generateWithFallback("gemini-3-flash-preview", [
       prompt,
       {
         inlineData: {

@@ -27,12 +27,22 @@ export async function createStagehand(): Promise<Stagehand> {
     );
   }
 
+  // Shim Google API Key for Stagehand/Vercel AI SDK if needed
+  if (process.env.GOOGLE_AI_API_KEY) {
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
+    }
+    if (!process.env.GOOGLE_API_KEY) {
+      process.env.GOOGLE_API_KEY = process.env.GOOGLE_AI_API_KEY;
+    }
+  }
+
   try {
     const stagehand = new Stagehand({
       env: "BROWSERBASE",
       apiKey: process.env.BROWSERBASE_API_KEY,
       projectId: process.env.BROWSERBASE_PROJECT_ID,
-      model: "openai/gpt-4o",
+      model: "google/gemini-2.0-flash",
       // Disable verbose logging (pino-pretty) for serverless compatibility
       verbose: 0,
     });
