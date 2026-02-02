@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
     "@browserbasehq/stagehand",
     "@browserbasehq/sdk",
     "weave",
+    "pino",
+    "pino-pretty",
   ],
 };
 

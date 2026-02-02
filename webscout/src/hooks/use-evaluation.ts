@@ -8,7 +8,7 @@ interface CohortMetrics {
   cacheHitRate: number;
   recoveryRate: number;
   patternsUsed: number;
-  avgQualityScore: number;
+  avgQualityScore?: number;
 }
 
 interface ImprovementMetric {

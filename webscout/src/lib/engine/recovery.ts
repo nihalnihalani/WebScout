@@ -145,15 +145,14 @@ async function executeStrategy(
   }
 }
 
-export const attemptRecovery = createTracedOp(
-  "attemptRecovery",
-  async function attemptRecovery(
-    stagehand: Stagehand,
-    page: Page,
-    task: TaskRequest,
-    failureContext: string,
-    strategyOrder?: string[]
-  ): Promise<RecoveryResult | null> {
+export async function attemptRecovery(
+  stagehand: Stagehand,
+  page: Page,
+  task: TaskRequest,
+  failureContext: string,
+  strategyOrder?: string[]
+): Promise<RecoveryResult | null> {
+  try {
     console.log("[Recovery] Starting multi-strategy recovery...");
 
     const urlPat = extractUrlPattern(task.url);
@@ -194,11 +193,8 @@ export const attemptRecovery = createTracedOp(
         return null;
       }
     );
-  },
-  {
-    summarize: (result: RecoveryResult | null) => ({
-      "webscout.recovery_success": result?.success ? 1 : 0,
-      "webscout.recovery_strategy": result?.strategy_used || "none",
-    }),
+  } catch (error) {
+    console.error("[Recovery] Critical error in recovery loop:", error);
+    return null;
   }
-);
+}
